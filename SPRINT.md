@@ -1,73 +1,43 @@
-# Sprint 1.5
+# Sprint 2
 
 ## Goal
 
-Finalize the project structure before implementing any business functionality.
-
-The objective of this sprint is to prepare a clean, scalable and maintainable codebase that will be used during the rest of the project.
-
-No business functionality should be implemented.
-
----
+Integrate Supabase Authentication infrastructure.
 
 ## Tasks
 
-### Frontend
-
-Organize the `features` directory by creating empty feature modules:
-
-- auth
-- customers
-- templates
-- campaigns
-- smtp
-
-Each feature should contain a minimal scalable folder structure using `README.md` or `.gitkeep` files where appropriate.
-
-Extend the `shared` directory by creating:
-
-- api
-- hooks
-- types
-- utils
-
----
-
 ### Backend
 
-Inside `app`, create an empty:
+- Configure Supabase SDK
+- Create configuration module
+- Configure environment variables
+- Create health endpoint
+- Verify Supabase connection
 
-- schemas
+### Frontend
 
-directory.
+- Install Supabase SDK
+- Create Supabase client
+- Configure environment variables
+- Create AuthProvider
+- Create ProtectedRoute
+- Configure routing
 
-Do not create database models yet.
+### Validation
 
----
+The application compiles.
 
-### Project Cleanup
+Supabase client works.
 
-Remove the `documentation` directory if it is no longer needed.
+Protected routes are available.
 
-Verify:
-
-- .venv is ignored by Git
-- node_modules is ignored by Git
-- environment files are handled correctly
-
-Review the current architecture and make small improvements where appropriate.
-
-Do not overengineer.
-
----
+No authentication forms are implemented yet.
 
 ## Definition of Done
 
-Sprint is complete when:
-
-- Feature folders exist.
-- Shared folders exist.
-- Backend contains the schemas package.
-- Repository is clean.
-- Project structure follows the engineering rules.
-- No business functionality has been added.
+- Backend configured
+- Frontend configured
+- Supabase client created
+- AuthProvider implemented
+- ProtectedRoute implemented
+- Project builds successfully

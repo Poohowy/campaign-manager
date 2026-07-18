@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     app_name: str = "Campaign Manager API"
     environment: str = "development"
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/campaign_manager"
+    supabase_url: str | None = None
+    supabase_anon_key: str | None = None
+    supabase_service_role_key: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
