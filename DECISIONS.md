@@ -145,3 +145,67 @@ Establishes a scalable authentication boundary without introducing login/registe
 
 Status:
 Accepted
+
+## ADR-010
+
+### Title
+
+Authentication handled entirely by Supabase
+
+### Decision
+
+The frontend communicates directly with Supabase Authentication.
+
+FastAPI does not implement authentication logic.
+
+Backend trusts JWT tokens issued by Supabase.
+
+### Reason
+
+This significantly reduces backend complexity while leveraging a secure, managed authentication provider.
+
+### Status
+
+Accepted
+
+---
+
+## ADR-012
+
+Title: Authentication Form and Routing Architecture
+
+Decision:
+Authentication forms use `react-hook-form` with `zod` schemas for reusable validation.
+
+Authentication pages are organized under `/auth/*` (`/auth/login`, `/auth/register`, `/auth/forgot-password`).
+
+Route access is enforced with two guards:
+
+- `PublicOnlyRoute` for authentication pages
+- `ProtectedRoute` for authenticated application pages
+
+Supabase auth operations are centralized in `features/auth/api/auth-client.ts`.
+
+Reason:
+Creates a scalable and consistent authentication boundary, avoids duplicated validation logic, and keeps auth behavior isolated inside the auth feature.
+
+Status:
+Accepted
+
+## ADR-011
+
+### Title
+
+UI Component Library
+
+### Decision
+
+The project uses **shadcn/ui** as the default UI component library.
+
+### Reason
+
+shadcn/ui provides modern, accessible and reusable components that integrate naturally with Tailwind CSS. Components are copied into the project, allowing full customization without vendor lock-in. The library is well understood by AI coding assistants, improving implementation quality and consistency.
+
+### Status
+
+Accepted

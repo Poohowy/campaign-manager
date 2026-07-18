@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Spinner } from '../../../components/ui/spinner'
 import { useAuth } from '../hooks/useAuth'
 
-export function ProtectedRoute({ children }: PropsWithChildren) {
+export function PublicOnlyRoute({ children }: PropsWithChildren) {
   const { isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
@@ -15,8 +15,8 @@ export function ProtectedRoute({ children }: PropsWithChildren) {
     )
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/auth/login" replace />
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>
