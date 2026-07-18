@@ -399,3 +399,24 @@ simplify,
 focus,
 
 and deliver value.
+
+Never place database access inside FastAPI routers.
+
+The architecture must always follow:
+
+Router
+→ Service
+→ Repository
+→ Database
+
+Business logic belongs only to the Service layer.
+
+Repositories are responsible only for data access.
+
+Services orchestrate business logic.
+
+Repositories never call other repositories.
+
+Routers never access repositories directly.
+
+Every business workflow starts in the Service layer.

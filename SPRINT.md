@@ -1,145 +1,162 @@
-# Sprint 3
+# Sprint 4
 
 ## Goal
 
-Implement a complete authentication system using Supabase Authentication.
+Implement the database foundation for the Campaign Manager backend.
 
-This sprint should transform the project from a technical skeleton into the first usable version of the application.
+The objective of this sprint is to create a production-ready persistence layer based on the approved `DATABASE.md` specification.
 
-The application should feel like a real SaaS product after this sprint.
+The implementation must strictly follow the database design.
 
-No Campaign Manager business functionality should be implemented yet.
+No business logic or API endpoints should be implemented.
 
 ---
 
 ## Tasks
 
-### UI Foundation
+### SQLAlchemy
 
-Initialize **shadcn/ui** and configure it as the default UI component library for the project.
+Configure SQLAlchemy 2.0 as the ORM for the project.
 
-Use shadcn/ui components whenever appropriate.
-
-The visual style should be:
-
-- clean
-- modern
-- minimal
-- professional
-- responsive
-
-Do not introduce unnecessary animations.
+Implement SQLAlchemy models for all entities defined in `DATABASE.md`.
 
 ---
 
-### Authentication UI
+### Alembic
 
-Implement the following pages:
+Configure Alembic.
 
-- Login
-- Register
-- Forgot Password
+Generate the initial migration.
 
-Reuse common components whenever possible.
-
-Authentication pages should provide a polished user experience.
+The generated schema must match `DATABASE.md`.
 
 ---
 
-### Authentication Flow
+### Database Schema
 
-Implement authentication using **Supabase Auth**.
+Implement the following tables:
 
-Support:
+- customers
+- templates
+- smtp_settings
+- campaigns
+- campaign_messages
 
-- User Registration
-- Email Verification
-- Login
-- Logout
-- Password Reset
-- Session Restoration
-
-Do not implement any custom authentication logic.
+Every table must follow the approved specification.
 
 ---
 
-### Route Protection
+### Relationships
 
-Complete the authentication flow using the existing:
+Implement all foreign keys and ORM relationships.
 
-- AuthProvider
-- ProtectedRoute
-
-Requirements:
-
-- Unauthenticated users are redirected to authentication pages.
-- Authenticated users cannot access login/register pages.
-- Session survives page refresh.
+Relationships should be explicit and bidirectional where appropriate.
 
 ---
 
-### Dashboard
+### Constraints
 
-Create the first protected application page.
+Implement:
 
-The dashboard should contain:
-
-- Application logo or title
-- Current authenticated user's email
-- Logout button
-
-No Campaign Manager functionality yet.
-
-The goal is simply to verify that authentication works correctly.
+- Primary Keys
+- Foreign Keys
+- Unique Constraints
+- Check Constraints (if applicable)
 
 ---
 
-### Error Handling
+### Indexes
 
-Provide clear and user-friendly error messages for:
-
-- Invalid credentials
-- Existing account
-- Weak password
-- Missing email verification
-- Unexpected authentication errors
-
-Do not expose technical error details.
+Implement every index defined in `DATABASE.md`.
 
 ---
 
-### Loading States
+### Enums
 
-Display loading indicators during:
+Create PostgreSQL enums for:
 
-- Login
-- Registration
-- Password Reset
-- Session Initialization
+- CampaignStatus
+- CampaignMessageStatus
 
-Avoid flashing or layout jumps.
+Use SQLAlchemy enum types.
 
 ---
 
-### Form Validation
+### JSON Fields
 
-Validate all authentication forms.
+Implement JSONB columns for:
 
-Validation should be reusable and easy to extend.
+- customers.custom_fields
+- campaign_messages.rendered_variables
+
+Provide appropriate defaults.
 
 ---
 
-### Code Quality
+### UUID Strategy
 
-Follow the engineering rules.
+Use UUID as the primary key for every business entity.
 
-Prefer reusable components.
+Configure automatic UUID generation.
 
-Keep business logic outside UI components.
+---
 
-Avoid duplicated code.
+### Repository Layer
 
-Keep authentication logic isolated inside the auth feature.
+Create repository classes for:
+
+- CustomerRepository
+- TemplateRepository
+- CampaignRepository
+- CampaignMessageRepository
+- SMTPSettingsRepository
+
+Repositories should contain only generic database operations.
+
+Do not implement business logic.
+
+---
+
+### Pydantic Schemas
+
+Create base schemas for all entities.
+
+Include:
+
+- Create schemas
+- Read schemas
+- Update schemas
+
+Do not implement validation specific to business rules yet.
+
+---
+
+### Tests
+
+Verify:
+
+- Initial migration executes successfully.
+- All tables are created.
+- Foreign keys are valid.
+- Constraints are enforced.
+- Indexes are created.
+- Enums work correctly.
+
+---
+
+## Out of Scope
+
+Do NOT implement:
+
+- API endpoints
+- Services
+- Customer import
+- SMTP sending
+- Email templates logic
+- Campaign sending
+- CSV/XLSX processing
+- Authentication changes
+- Background jobs
 
 ---
 
@@ -147,19 +164,27 @@ Keep authentication logic isolated inside the auth feature.
 
 Sprint is complete when:
 
-- shadcn/ui has been configured.
-- Login page is implemented.
-- Register page is implemented.
-- Forgot Password page is implemented.
-- User registration works.
-- Verification email is sent.
-- Login works.
-- Logout works.
-- Password reset works.
-- Session survives browser refresh.
-- Protected routes work correctly.
-- Authenticated users cannot access authentication pages.
-- Dashboard is available after login.
-- Application builds successfully.
-- Lint passes.
-- Tests pass.
+- SQLAlchemy 2.0 is fully configured.
+- Alembic is configured.
+- Initial migration has been generated.
+- Database schema matches `DATABASE.md`.
+- SQLAlchemy models are implemented.
+- Repository layer exists.
+- Base Pydantic schemas exist.
+- Migration runs successfully on an empty database.
+- Backend starts without errors.
+- All tests pass.
+
+---
+
+## Deliverables
+
+At the end of the sprint the developer should provide:
+
+1. Summary of implemented functionality.
+2. Database schema overview.
+3. Explanation of architectural decisions.
+4. Suggested updates to `DECISIONS.md`.
+5. Any discrepancies found between implementation and `DATABASE.md`.
+
+Wait for review before continuing.

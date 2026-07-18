@@ -1,1 +1,29 @@
-"""Pydantic schema modules will be added in upcoming sprints."""
+from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignUpdate
+from app.schemas.campaign_message import (
+    CampaignMessageCreate,
+    CampaignMessageRead,
+    CampaignMessageUpdate,
+)
+from app.schemas.customer import CustomerCreate, CustomerRead, CustomerUpdate
+from app.schemas.health import HealthStatusResponse
+from app.schemas.smtp_settings import SMTPSettingsCreate, SMTPSettingsRead, SMTPSettingsUpdate
+from app.schemas.template import TemplateCreate, TemplateRead, TemplateUpdate
+
+__all__ = [
+    "CampaignCreate",
+    "CampaignMessageCreate",
+    "CampaignMessageRead",
+    "CampaignMessageUpdate",
+    "CampaignRead",
+    "CampaignUpdate",
+    "CustomerCreate",
+    "CustomerRead",
+    "CustomerUpdate",
+    "HealthStatusResponse",
+    "SMTPSettingsCreate",
+    "SMTPSettingsRead",
+    "SMTPSettingsUpdate",
+    "TemplateCreate",
+    "TemplateRead",
+    "TemplateUpdate",
+]

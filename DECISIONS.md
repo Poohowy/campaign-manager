@@ -209,3 +209,104 @@ shadcn/ui provides modern, accessible and reusable components that integrate nat
 ### Status
 
 Accepted
+
+## ADR-012
+
+Title: REST API Versioning
+
+Decision:
+The backend exposes all endpoints under `/api/v1`. Future breaking changes will be introduced through new API versions rather than modifying existing endpoints.
+
+Reason:
+Provides a stable API contract for the frontend, enables backward compatibility in future releases, and allows the API to evolve without breaking existing clients.
+
+Status:
+Accepted
+
+---
+
+## ADR-013
+
+Title: Standardized API Response Format
+
+Decision:
+All successful API responses use a consistent response envelope containing a `data` field. Collection endpoints additionally include a `pagination` object. Error responses always return an `error` object containing a machine-readable `code` and a human-readable `message`.
+
+Reason:
+A consistent response structure simplifies frontend development, reduces error-handling complexity, improves API predictability, and makes future integrations easier.
+
+Status:
+Accepted
+
+## ADR-014
+
+Title: Database-First Development
+
+Decision:
+The database schema is designed and reviewed before implementing SQLAlchemy models, repositories, or API endpoints. The approved database design serves as the single source of truth for the backend implementation.
+
+Reason:
+Designing the data model first reduces costly refactoring, improves consistency across the backend, and ensures that business requirements are reflected in the database before implementation begins.
+
+Status:
+Accepted
+
+---
+
+## ADR-015
+
+Title: User Ownership Foreign Key Strategy
+
+Decision:
+Business tables store `user_id` as `UUID NOT NULL` without a database-level foreign key to Supabase `auth.users`.
+
+Ownership and access control are enforced through Supabase JWT identity and Row Level Security policies.
+
+Reason:
+Keeps the application schema decoupled from Supabase-managed internal auth tables while preserving strict user ownership semantics at the authorization layer.
+
+Status:
+Accepted
+
+---
+
+## ADR-016
+
+Title: Database Naming Canonicalization
+
+Decision:
+`DATABASE.md` is the canonical source for database naming and schema details.
+
+Implementation names must follow it exactly, including:
+
+- `password_encrypted`
+- `body_markdown`
+- `CampaignStatus`
+- `CampaignMessageStatus`
+
+Reason:
+Prevents schema drift between documents and implementation, reduces migration rework, and keeps backend/database contracts predictable.
+
+Status:
+Accepted
+
+---
+
+## ADR-017
+
+Title: ADR Document Governance
+
+Decision:
+ADR entries must follow a consistent structure and unique numbering:
+
+- one ADR number used exactly once
+- uniform section labels (`Title`, `Decision`, `Reason`, `Status`)
+- append-only numbering for new accepted decisions
+
+Existing duplicate or inconsistent ADR entries should be normalized in a dedicated documentation cleanup pass, without changing the underlying accepted decisions.
+
+Reason:
+Improves traceability, avoids ambiguity during implementation, and keeps architecture decisions auditable as the project grows.
+
+Status:
+Accepted
