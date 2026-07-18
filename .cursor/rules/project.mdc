@@ -1,0 +1,401 @@
+---
+alwaysApply: true
+---
+
+# Data Wildcat Engineering Rules
+
+Version: 1.0
+
+These rules apply to every software project developed by Data Wildcat.
+
+The objective is to build software that is:
+
+* Simple
+* Maintainable
+* Secure
+* Production-ready
+* Easy to extend
+* AI-friendly
+
+---
+
+# 1. Engineering Philosophy
+
+We optimize for business value, not technical complexity.
+
+Technology is a tool.
+
+The product always comes first.
+
+Every feature should solve a real customer problem.
+
+Avoid overengineering.
+
+Prefer working software over perfect architecture.
+
+Deliver value early.
+
+Improve continuously.
+
+---
+
+# 2. MVP First
+
+Every project starts with an MVP.
+
+The MVP should be deliverable within days, not months.
+
+Whenever a new feature is proposed ask:
+
+Does this help deliver value to the customer today?
+
+If not,
+
+move it to the backlog.
+
+---
+
+# 3. Keep Things Simple
+
+Prefer simple solutions.
+
+Prefer explicit code.
+
+Avoid unnecessary abstractions.
+
+Avoid premature optimization.
+
+Do not introduce patterns without a clear benefit.
+
+Simple code is easier to understand, maintain and extend.
+
+---
+
+# 4. AI-Assisted Development
+
+AI is a team member.
+
+Not a replacement for engineering judgement.
+
+Use AI to:
+
+* generate code
+* explain concepts
+* review implementations
+* generate documentation
+* generate tests
+* refactor code
+
+Never blindly accept generated code.
+
+Always understand important architectural decisions.
+
+---
+
+# 5. Architecture
+
+Separate responsibilities.
+
+Presentation
+
+↓
+
+Business Logic
+
+↓
+
+Persistence
+
+Never mix these layers.
+
+Business rules must never live inside UI components.
+
+Database access must never contain business logic.
+
+---
+
+# 6. Backend Standards
+
+Preferred stack:
+
+* FastAPI
+* SQLAlchemy
+* Alembic
+* PostgreSQL
+
+Structure:
+
+Routers
+
+↓
+
+Services
+
+↓
+
+Repositories
+
+↓
+
+Database
+
+Routers should stay thin.
+
+Services contain business logic.
+
+Repositories only access the database.
+
+---
+
+# 7. Frontend Standards
+
+Preferred stack:
+
+* React
+* TypeScript
+* Tailwind CSS
+
+Guidelines:
+
+Small components.
+
+Reusable components.
+
+Composition over inheritance.
+
+Prefer hooks.
+
+Avoid duplicated logic.
+
+Keep components focused.
+
+Separate UI from business logic.
+
+---
+
+# 8. Database Standards
+
+Use PostgreSQL whenever possible.
+
+Prefer normalized schemas.
+
+Use JSONB only when flexibility is required.
+
+Never store duplicated information.
+
+Generate migrations for every schema change.
+
+Never manually modify production schemas.
+
+---
+
+# 9. Authentication
+
+Preferred solution:
+
+Supabase Authentication.
+
+Never implement custom authentication unless there is a strong business reason.
+
+---
+
+# 10. Authorization
+
+Use Row Level Security whenever possible.
+
+Every business entity should belong to a specific owner.
+
+Never expose another customer's data.
+
+Security should be enforced by the database whenever possible.
+
+---
+
+# 11. Security
+
+Security is never optional.
+
+Secrets must never be committed to Git.
+
+Use:
+
+* .env
+* Secret Managers
+
+Encrypt sensitive credentials before storing.
+
+Never expose secrets to the frontend.
+
+Validate all user input.
+
+Never trust client-side validation.
+
+Always use HTTPS.
+
+---
+
+# 12. API Design
+
+Prefer REST.
+
+Use meaningful endpoints.
+
+Return proper HTTP status codes.
+
+Use request validation.
+
+Return consistent error responses.
+
+Document APIs.
+
+---
+
+# 13. Error Handling
+
+Errors should be:
+
+* informative
+* consistent
+* logged
+
+Users should receive understandable messages.
+
+Internal exceptions must never expose implementation details.
+
+---
+
+# 14. Code Quality
+
+Code should be:
+
+Simple.
+
+Readable.
+
+Maintainable.
+
+Meaningful names.
+
+Small functions.
+
+Small classes.
+
+Avoid duplication.
+
+Write code for humans first.
+
+Computers second.
+
+---
+
+# 15. Documentation
+
+Every project should contain:
+
+README.md
+
+PRD.md
+
+TASKS.md
+
+Documentation should stay synchronized with the implementation.
+
+---
+
+# 16. Git
+
+Commit often.
+
+Keep commits focused.
+
+One logical change per commit.
+
+Meaningful commit messages.
+
+---
+
+# 17. Testing
+
+Critical business logic should be testable.
+
+Prefer automated tests for business logic.
+
+Manual testing is acceptable for MVP UI.
+
+---
+
+# 18. Performance
+
+Do not optimize prematurely.
+
+Measure before optimizing.
+
+Optimize only proven bottlenecks.
+
+---
+
+# 19. User Experience
+
+Software should be:
+
+Simple.
+
+Predictable.
+
+Fast.
+
+Minimal.
+
+Avoid unnecessary animations.
+
+Avoid unnecessary clicks.
+
+Reduce cognitive load.
+
+---
+
+# 20. Future Development
+
+Every project should be easy to extend.
+
+Design today's solution without blocking tomorrow's features.
+
+Do not build future features before they are needed.
+
+Build foundations.
+
+Not castles.
+
+---
+
+# 21. Definition of Success
+
+Success is not measured by:
+
+* number of technologies
+* architecture diagrams
+* code size
+
+Success is measured by:
+
+* working software
+* satisfied customers
+* maintainable code
+* fast delivery
+* business value
+
+---
+
+# 22. Final Principle
+
+Always ask:
+
+"If I were paying for this software, would I be happy with today's progress?"
+
+If the answer is no,
+
+simplify,
+
+focus,
+
+and deliver value.
