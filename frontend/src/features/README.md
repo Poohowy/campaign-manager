@@ -1,1 +1,1 @@
-Feature modules will be added here in later phases.
+Feature modules are organized by domain (auth, customers, templates, campaigns, smtp).

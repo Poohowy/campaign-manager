@@ -71,7 +71,6 @@ campaign-manager/
 ├── PRD.md
 ├── README.md
 ├── TASKS.md
-├── documentation/
 ├── frontend/
 └── backend/
 ```
