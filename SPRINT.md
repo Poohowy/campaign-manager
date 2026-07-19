@@ -1,129 +1,111 @@
-# Sprint 9
+# Sprint 10
 
 ## Goal
 
-Implement Template Rendering and Variable Picker.
+Implement SMTP configuration and connection testing.
 
-Users should be able to insert predefined variables into email templates and preview the rendered result using data from a selected customer.
+Authenticated users should be able to configure SMTP settings, securely store credentials, and verify that the configuration works by sending a test email.
 
-No email sending or SMTP functionality should be implemented in this sprint.
+No campaign sending functionality should be implemented in this sprint.
 
 ---
 
 ## Backend
 
-### Template Rendering
+### SMTP Configuration
 
 Implement:
 
-```
-POST /api/v1/templates/render
-```
+GET /api/v1/smtp
 
-The endpoint accepts:
+PUT /api/v1/smtp
 
-```json
-{
-  "template_id": "uuid",
-  "customer_id": "uuid"
-}
-```
+POST /api/v1/smtp/test
 
-The backend must:
+Requirements:
 
-- load the template
-- load the selected customer
-- replace supported variables
-- return the rendered subject and body
-
-The rendering logic belongs exclusively to the Service layer.
+- every user owns exactly one SMTP configuration,
+- passwords must never be returned by the API,
+- passwords must be encrypted before being stored,
+- existing SMTP configuration should be updated instead of creating duplicates.
 
 ---
 
-### Supported Variables
+### SMTP Test
 
-Support the following variables:
+Implement SMTP connection testing.
 
-- {{company_name}}
-- {{contact_name}}
-- {{email}}
-- {{phone}}
-- {{website}}
-- {{city}}
-- {{country}}
+The endpoint should:
 
-Unknown variables must remain unchanged.
+- load the authenticated user's SMTP configuration,
+- decrypt the stored password,
+- establish an SMTP connection,
+- send a simple test email,
+- return success or a standardized error response.
+
+---
+
+### Security
+
+Requirements:
+
+- passwords must never be logged,
+- passwords must never be returned by the API,
+- passwords must always remain encrypted in the database,
+- only the authenticated user may access their SMTP configuration.
 
 ---
 
 ## Frontend
 
-### Variable Picker
+Create a dedicated SMTP Settings page.
 
-Add an **Insert Variable** button next to:
+Fields:
 
-- Subject
-- Body
-
-When clicked, display a list of supported variables.
-
-Selecting a variable inserts it at the current cursor position.
-
-Users may still type variables manually.
-
----
-
-### Template Preview
-
-Add a **Preview** button.
-
-When clicked:
-
-- allow the user to choose one of their imported customers,
-- call the backend rendering endpoint,
-- display the rendered Subject and Body.
-
-Preview must not save any changes.
-
----
-
-### Markdown Preview
-
-The template body should support two tabs:
-
-- Edit
-- Preview
-
-Preview renders Markdown as HTML.
-
-Editing remains in the existing textarea.
-
----
-
-## Architecture
-
-Reuse the existing architecture:
-
-Router
-
-↓
-
-Service
-
-↓
-
-Repository
-
-↓
-
-Database
+- SMTP Host
+- SMTP Port
+- Username
+- Password
+- From Name
+- From Email
+- Use TLS
 
 Requirements:
 
-- rendering logic belongs only to TemplateService,
-- routers remain thin,
-- repositories perform data access only,
-- all API responses use the standardized response envelope.
+- create and edit use the same form,
+- password field behaves like a standard password input,
+- existing configuration is loaded automatically,
+- password is never displayed after saving.
+
+---
+
+### Test Email
+
+Add a section:
+
+Test SMTP Connection
+
+Field:
+
+Recipient Email
+
+Button:
+
+Send Test Email
+
+Display:
+
+- loading state,
+- success message,
+- backend validation errors.
+
+---
+
+## UI
+
+Reuse existing UI components.
+
+Keep the page visually consistent with Customers and Templates.
 
 ---
 
@@ -131,20 +113,21 @@ Requirements:
 
 Backend:
 
-- render template successfully
-- replace supported variables
-- leave unknown variables unchanged
-- template ownership enforcement
-- customer ownership enforcement
+- create SMTP configuration
+- update SMTP configuration
+- encrypt password
+- decrypt password
+- send test email
+- ownership enforcement
 
 Frontend:
 
-- variable picker
-- variable insertion
-- markdown preview
-- template preview
-- rendered output
-- API integration
+- load SMTP configuration
+- save SMTP configuration
+- password handling
+- send test email
+- success message
+- validation
 
 ---
 
@@ -152,14 +135,12 @@ Frontend:
 
 Do not implement:
 
-- SMTP
-- Email sending
-- Campaigns
-- Rich text editor
-- WYSIWYG editor
-- Custom field variables
-- Saving preview state
-- Template versioning
+- Campaign sending
+- Queue
+- Retry logic
+- Attachments
+- OAuth authentication
+- Multiple SMTP configurations
 
 ---
 
@@ -167,11 +148,10 @@ Do not implement:
 
 Sprint is complete when:
 
-- variables can be inserted using the Variable Picker,
-- variables are inserted at the cursor position,
-- templates can be rendered using a selected customer,
-- Markdown Preview works,
-- rendering is performed by the backend,
-- unknown variables do not cause errors,
-- all tests pass,
-- the application remains fully functional.
+- SMTP configuration can be created.
+- Existing configuration can be edited.
+- Passwords are encrypted.
+- Passwords are never returned by the API.
+- Test email can be sent.
+- Success and error states are displayed.
+- Tests pass.

@@ -6,9 +6,10 @@ const primaryItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Customers', to: '/customers' },
   { label: 'Templates', to: '/templates' },
+  { label: 'SMTP', to: '/smtp' },
 ]
 
-const disabledItems = ['Campaigns', 'SMTP']
+const disabledItems = ['Campaigns']
 
 export function AppShell({ children }: PropsWithChildren) {
   return (

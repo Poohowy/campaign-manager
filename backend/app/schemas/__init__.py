@@ -6,7 +6,13 @@ from app.schemas.campaign_message import (
 )
 from app.schemas.customer import CustomerCreate, CustomerRead, CustomerUpdate
 from app.schemas.health import HealthStatusResponse
-from app.schemas.smtp_settings import SMTPSettingsCreate, SMTPSettingsRead, SMTPSettingsUpdate
+from app.schemas.smtp_settings import (
+    SMTPSettingsRead,
+    SMTPSettingsSaveResult,
+    SMTPSettingsUpsertRequest,
+    SMTPTestRequest,
+    SMTPTestResult,
+)
 from app.schemas.template import (
     TemplateCreateRequest,
     TemplateDeleteResult,
@@ -28,9 +34,11 @@ __all__ = [
     "CustomerRead",
     "CustomerUpdate",
     "HealthStatusResponse",
-    "SMTPSettingsCreate",
     "SMTPSettingsRead",
-    "SMTPSettingsUpdate",
+    "SMTPSettingsSaveResult",
+    "SMTPSettingsUpsertRequest",
+    "SMTPTestRequest",
+    "SMTPTestResult",
     "TemplateCreateRequest",
     "TemplateDeleteResult",
     "TemplateRead",

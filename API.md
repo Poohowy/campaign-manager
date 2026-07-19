@@ -302,27 +302,84 @@ Returns:
 
 # Resource: SMTP Settings
 
-Represents the SMTP configuration for the current user.
+Represents the SMTP configuration for the authenticated user.
 
 ---
 
 ## GET /smtp
 
-Returns SMTP configuration.
+Returns the current SMTP configuration.
 
-Sensitive fields (such as passwords) must never be returned.
+Sensitive values (such as passwords) are never returned.
+
+Response:
+
+```json
+{
+  "data": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "username": "user@example.com",
+    "from_name": "John Smith",
+    "from_email": "user@example.com",
+    "use_tls": true
+  }
+}
+```
 
 ---
 
 ## PUT /smtp
 
-Creates or updates SMTP configuration.
+Creates or updates the SMTP configuration.
+
+Request:
+
+```json
+{
+  "host": "smtp.gmail.com",
+  "port": 587,
+  "username": "user@example.com",
+  "password": "secret",
+  "from_name": "John Smith",
+  "from_email": "user@example.com",
+  "use_tls": true
+}
+```
+
+Returns:
+
+```json
+{
+  "data": {
+    "saved": true
+  }
+}
+```
 
 ---
 
 ## POST /smtp/test
 
-Sends a test email using the configured SMTP server.
+Sends a test email using the configured SMTP settings.
+
+Request:
+
+```json
+{
+  "recipient": "john@example.com"
+}
+```
+
+Returns:
+
+```json
+{
+  "data": {
+    "success": true
+  }
+}
+```
 
 ---
 

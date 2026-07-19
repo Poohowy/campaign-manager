@@ -20,5 +20,6 @@ def test_initial_migration_renders_expected_sql(capsys) -> None:
     assert "create table customers" in sql
     assert "create table templates" in sql
     assert "create table smtp_settings" in sql
+    assert "use_tls" in sql
     assert "create table campaigns" in sql
     assert "create table campaign_messages" in sql

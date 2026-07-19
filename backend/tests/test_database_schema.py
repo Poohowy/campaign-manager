@@ -1,4 +1,4 @@
-from sqlalchemy import Enum, UniqueConstraint
+from sqlalchemy import Boolean, Enum, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 
 from app.db import models  # noqa: F401
@@ -99,3 +99,11 @@ def test_enum_columns_are_present() -> None:
     assert isinstance(message_status, Enum)
     assert campaign_status.name == "campaign_status"
     assert message_status.name == "campaign_message_status"
+
+
+def test_smtp_settings_has_use_tls_column() -> None:
+    smtp_settings = Base.metadata.tables["smtp_settings"]
+    use_tls = smtp_settings.c.use_tls
+
+    assert isinstance(use_tls.type, Boolean)
+    assert use_tls.nullable is False

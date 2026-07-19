@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_anon_key: str | None = None
     supabase_service_role_key: str | None = None
+    smtp_encryption_key: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

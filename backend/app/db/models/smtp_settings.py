@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Integer, Text, UniqueConstraint
+from sqlalchemy import Boolean, Integer, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -19,3 +19,4 @@ class SMTPSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     password_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
     from_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     from_email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    use_tls: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
