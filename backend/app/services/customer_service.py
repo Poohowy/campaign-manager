@@ -3,7 +3,7 @@ import uuid
 
 from app.db.models import Customer
 from app.repositories.customer_repository import CustomerRepository
-from app.schemas.customer import CustomerCreate
+from app.schemas.customer import CustomerCreate, CustomerDeleteResult
 from app.schemas.customer_import import CustomerImportMapping, CustomerImportResult
 from app.services.customer_import_service import (
     CustomerImportService,
@@ -55,6 +55,15 @@ class CustomerService:
             return self.repository.create(user_id=user_id, **values)
 
         return self.repository.update(existing, **values)
+
+    def delete_customers(
+        self,
+        *,
+        user_id: uuid.UUID,
+        customer_ids: list[uuid.UUID],
+    ) -> CustomerDeleteResult:
+        deleted_count = self.repository.delete_by_user_ids(user_id, customer_ids)
+        return CustomerDeleteResult(deleted=deleted_count)
 
     def import_customers(
         self,

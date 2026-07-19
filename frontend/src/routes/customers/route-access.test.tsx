@@ -68,6 +68,6 @@ describe('Customers access', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Your customer list is currently empty.')).toBeInTheDocument()
+    expect(screen.getByText(/Your customer list is currently empty\./)).toBeInTheDocument()
   })
 })

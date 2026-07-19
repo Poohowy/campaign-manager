@@ -306,6 +306,35 @@ Supports filtering by:
 
 ---
 
+## DELETE /customers
+
+Deletes selected customers.
+
+Request:
+
+```json
+{
+  "ids": [
+    "uuid-1",
+    "uuid-2"
+  ]
+}
+```
+
+Only customers belonging to the authenticated user may be deleted.
+
+Returns:
+
+```json
+{
+  "data": {
+    "deleted": 2
+  }
+}
+```
+
+---
+
 ## GET /health
 
 Returns backend health information.

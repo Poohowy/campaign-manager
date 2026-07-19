@@ -8,6 +8,7 @@ from app.api.dependencies.auth import get_current_user_id
 from app.api.routes.customers import get_customer_import_service, get_customer_service
 from app.db.session import get_db_session
 from app.main import app
+from app.schemas.customer import CustomerDeleteResult
 from app.schemas.customer_import import CustomerImportMapping, CustomerImportPreview
 
 
@@ -286,5 +287,68 @@ def test_import_customers_rejects_invalid_mapping_payload() -> None:
         "error": {
             "code": "IMPORT_MAPPING_INVALID",
             "message": "Column mapping is invalid.",
+        }
+    }
+
+
+def test_delete_customers_returns_deleted_count_envelope() -> None:
+    user_id = uuid.uuid4()
+    customer_id = uuid.uuid4()
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+    class FakeService:
+        def delete_customers(self, *, user_id: uuid.UUID, customer_ids: list[uuid.UUID]):
+            assert customer_ids == [customer_id]
+            return CustomerDeleteResult(deleted=1)
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+    app.dependency_overrides[get_customer_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.request(
+        "DELETE",
+        "/api/v1/customers",
+        json={"ids": [str(customer_id)]},
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json() == {"data": {"deleted": 1}}
+
+
+def test_delete_customers_requires_ids() -> None:
+    user_id = uuid.uuid4()
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+    class FakeService:
+        def delete_customers(self, *, user_id: uuid.UUID, customer_ids: list[uuid.UUID]):
+            return CustomerDeleteResult(deleted=0)
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+    app.dependency_overrides[get_customer_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.request(
+        "DELETE",
+        "/api/v1/customers",
+        json={"ids": []},
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": {
+            "code": "CUSTOMER_IDS_REQUIRED",
+            "message": "At least one customer ID is required.",
         }
     }

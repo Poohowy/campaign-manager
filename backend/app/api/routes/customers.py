@@ -3,7 +3,7 @@ import math
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, Query, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -18,7 +18,7 @@ from app.schemas.api import (
     PaginatedResponse,
     PaginationMeta,
 )
-from app.schemas.customer import CustomerRead
+from app.schemas.customer import CustomerDeleteRequest, CustomerDeleteResult, CustomerRead
 from app.schemas.customer_import import (
     CustomerImportMapping,
     CustomerImportPreview,
@@ -35,6 +35,7 @@ CurrentUserDep = Annotated[uuid.UUID | None, Depends(get_current_user_id)]
 DBSessionDep = Annotated[Session, Depends(get_db_session)]
 CSVFileDep = Annotated[UploadFile | None, File()]
 MappingPayloadDep = Annotated[str | None, Form()]
+CustomerDeletePayloadDep = Annotated[CustomerDeleteRequest, Body()]
 
 
 def get_customer_service(session: DBSessionDep) -> CustomerService:
@@ -109,6 +110,29 @@ def get_customer_by_id(
     return DataResponse[CustomerRead](
         data=CustomerRead.model_validate(customer, from_attributes=True)
     )
+
+
+@router.delete("", response_model=DataResponse[CustomerDeleteResult])
+def delete_customers(
+    payload: CustomerDeletePayloadDep,
+    user_id: CurrentUserDep,
+    service: CustomerServiceDep,
+    session: DBSessionDep,
+):
+    if user_id is None:
+        return _error_response(401, "UNAUTHORIZED", "Unauthorized.")
+
+    if not payload.ids:
+        return _error_response(
+            400,
+            "CUSTOMER_IDS_REQUIRED",
+            "At least one customer ID is required.",
+        )
+
+    result = service.delete_customers(user_id=user_id, customer_ids=payload.ids)
+    session.commit()
+
+    return DataResponse[CustomerDeleteResult](data=result)
 
 
 @router.post("/import/preview", response_model=DataResponse[CustomerImportPreview])

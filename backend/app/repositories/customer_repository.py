@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Select, asc, desc, func, or_, select
+from sqlalchemy import Select, asc, delete, desc, func, or_, select
 
 from app.db.models import Customer
 from app.repositories.base import BaseRepository
@@ -43,6 +43,17 @@ class CustomerRepository(BaseRepository[Customer]):
         stmt = select(func.count(Customer.id)).where(Customer.user_id == user_id)
         stmt = self._apply_search(stmt, search)
         return int(self.session.scalar(stmt) or 0)
+
+    def delete_by_user_ids(self, user_id: uuid.UUID, customer_ids: list[uuid.UUID]) -> int:
+        if not customer_ids:
+            return 0
+
+        stmt = delete(Customer).where(
+            Customer.user_id == user_id,
+            Customer.id.in_(customer_ids),
+        )
+        result = self.session.execute(stmt)
+        return int(result.rowcount or 0)
 
     def _apply_search(self, stmt: Select, search: str | None) -> Select:
         if not search:

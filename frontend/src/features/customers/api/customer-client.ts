@@ -1,4 +1,4 @@
-import type { CustomersListResult } from '../types/customer'
+import type { CustomersDeleteResponse, CustomersListResult } from '../types/customer'
 import type { CustomerImportMappings, CustomerImportPreviewResponse, CustomerImportResponse } from '../types/customer-import'
 
 type ErrorEnvelope = {
@@ -34,6 +34,30 @@ export async function fetchCustomers(accessToken: string): Promise<CustomersList
   }
 
   return (await response.json()) as CustomersListResult
+}
+
+export async function deleteCustomers(
+  accessToken: string,
+  customerIds: string[],
+): Promise<CustomersDeleteResponse> {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/customers`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids: customerIds }),
+  })
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ErrorEnvelope | null
+    throw new CustomersApiError(
+      payload?.error?.code ?? 'CUSTOMERS_DELETE_FAILED',
+      payload?.error?.message ?? 'Unable to delete selected customers.',
+    )
+  }
+
+  return (await response.json()) as CustomersDeleteResponse
 }
 
 export async function fetchCustomerImportPreview(

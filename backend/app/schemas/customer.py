@@ -36,3 +36,11 @@ class CustomerUpdate(BaseModel):
     contact_name: str | None = None
     phone: str | None = None
     custom_fields: dict[str, object] | None = None
+
+
+class CustomerDeleteRequest(BaseModel):
+    ids: list[uuid.UUID]
+
+
+class CustomerDeleteResult(BaseModel):
+    deleted: int

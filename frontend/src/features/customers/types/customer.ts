@@ -22,3 +22,11 @@ export type CustomersListResult = {
   data: Customer[]
   pagination: CustomersPagination
 }
+
+export type CustomersDeleteResult = {
+  deleted: number
+}
+
+export type CustomersDeleteResponse = {
+  data: CustomersDeleteResult
+}

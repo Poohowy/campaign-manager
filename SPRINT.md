@@ -1,12 +1,10 @@
-# Sprint 7
+# Sprint 7.5
 
 ## Goal
 
-Complete the customer import workflow.
+Implement basic customer deletion.
 
-After this sprint, authenticated users should be able to import customers into the database using the previously selected column mapping.
-
-The import must perform upsert operations and preserve existing customer history.
+Authenticated users should be able to select one or more customers and permanently delete them after explicit confirmation.
 
 ---
 
@@ -16,105 +14,139 @@ The import must perform upsert operations and preserve existing customer history
 
 Implement:
 
-POST /api/v1/customers/import
+DELETE /api/v1/customers
 
-Responsibilities:
+Request:
 
-- receive the selected column mapping
-- parse the uploaded CSV
-- validate required fields
-- perform upsert operations
-- preserve existing customer records
-- never overwrite campaign-related information
+```json
+{
+  "ids": [
+    "uuid-1",
+    "uuid-2"
+  ]
+}
+```
 
-Upsert must use the selected External ID as the unique identifier.
+Requirements:
 
-Return:
+- Delete only customers belonging to the authenticated user.
+- Ignore non-existing IDs.
+- Return the number of deleted customers.
+- Use the standard API response envelope.
 
-- imported count
-- updated count
-- skipped count
+Example response:
 
-using the standard API response envelope.
-
-The import endpoint must receive the original CSV file again together with the selected column mapping.
-The backend must not persist preview data or temporary import sessions between requests.
-The import process must remain stateless.
-
----
-
-### Import Rules
-
-For every row:
-
-If External ID does not exist:
-
-- create a new customer
-
-If External ID already exists:
-
-- update customer information
-
-Never modify:
-
-- created_at
-- campaign history
-- future campaign statistics
-
-Only customer profile fields may be updated.
-
----
-
-### Validation
-
-Skip invalid rows.
-
-Examples:
-
-- missing External ID
-- missing Company Name
-- missing Email
-- invalid email
-
-Skipped rows should not stop the import.
-
-Return the number of skipped rows.
+```json
+{
+  "data": {
+    "deleted": 5
+  }
+}
+```
 
 ---
 
 ### Frontend
 
-Complete the import dialog.
+Add row selection to the Customers table.
 
-After clicking Continue:
+Requirements:
 
-- upload the CSV
-- send the selected mapping
-- execute the import
-- display loading state
+- Checkbox for every row.
+- Checkbox in the table header for **Select All / Deselect All** on the current page.
+- Support selecting one or more customers.
+- Display **Delete Selected** only when at least one customer is selected.
+- Hide **Import Customers** while selection mode is active.
+- Replace the default page title with a selection summary whenever at least one customer is selected.
+- Clicking a table row (except interactive controls) should toggle the row selection.
 
-After completion:
+Examples:
 
-Display:
+- 1 customer selected
+- 3 customers selected
+- 15 customers selected
 
-- Imported
-- Updated
-- Skipped
+The selection summary should appear in the page header next to the available bulk actions.
 
-Close the dialog.
+The header checkbox should:
 
-Refresh the Customers table automatically.
+- Select all customers currently visible on the page.
+- Deselect all customers when clicked again.
+- Correctly reflect the current selection state.
+- Display the indeterminate state when only some rows are selected.
 
-After preview generation, keep the selected File object in client memory.
-When the user clicks Continue, send the original CSV file again together with the selected column mapping.
+Selections should persist while sorting or filtering the current page, but should be cleared after successful deletion.
+
+---
+
+### Confirmation Dialog
+
+Before deleting customers, display a confirmation dialog.
+
+Use the standard shadcn/ui Alert Dialog.
+
+Title:
+
+Delete Customers
+
+Message:
+
+Are you sure you want to permanently delete the selected customers?
+
+This action cannot be undone.
+
+Buttons:
+
+- Cancel
+- Delete
+
+Requirements:
+
+- Delete must use the destructive variant.
+- Cancel should keep the current selection.
+- Clicking outside the dialog must not delete customers.
+
+---
+
+### After Successful Deletion
+
+- Close the dialog.
+- Refresh the customer list automatically.
+- Clear the current selection.
+- Restore the default page title ("Customers").
+- Restore the **Import Customers** button.
+- Display a success message showing how many customers were deleted.
+
+Example:
+
+Customer deleted successfully.
+
+or
+
+5 customers deleted successfully.
+
+---
+
+### Validation
+
+- Do not allow deletion when nothing is selected.
+- Handle backend errors gracefully.
+- Never delete customers belonging to another user.
 
 ---
 
 ### UI
 
-Display success feedback after import.
+Use shadcn/ui components.
 
-Display backend validation errors when import fails.
+Use:
+
+- Table
+- Checkbox
+- Alert Dialog
+- Button
+
+Keep the page simple and consistent with the existing Customers module.
 
 ---
 
@@ -122,17 +154,23 @@ Display backend validation errors when import fails.
 
 Backend:
 
-- import new customers
-- update existing customers
-- preserve existing data
-- skip invalid rows
+- delete one customer
+- delete multiple customers
+- ignore unknown IDs
+- enforce user ownership
 
 Frontend:
 
-- successful import
-- loading state
-- import summary
-- automatic customer table refresh
+- row selection
+- select all
+- deselect all
+- indeterminate header checkbox
+- confirmation dialog
+- successful deletion
+- automatic table refresh
+- success message
+- Import button visibility
+- selection summary visibility
 
 ---
 
@@ -140,12 +178,12 @@ Frontend:
 
 Do not implement:
 
-- XLSX
-- duplicate merge UI
-- import history
-- rollback
-- background jobs
-- progress bars
+- Delete All
+- Soft delete
+- Undo
+- Bulk edit
+- Archive
+- Pagination-aware selection across multiple pages
 
 ---
 
@@ -153,9 +191,14 @@ Do not implement:
 
 Sprint is complete when:
 
-- Customers can be imported.
-- Existing customers are updated.
-- Invalid rows are skipped.
+- One or more customers can be selected.
+- Users can select or deselect all customers on the current page.
+- The header checkbox correctly supports the indeterminate state.
+- Import Customers is replaced by Delete Selected while rows are selected.
+- The page title changes to the selection summary.
+- Confirmation dialog is displayed before deletion.
+- Selected customers are deleted.
 - Customer list refreshes automatically.
-- Import summary is displayed.
+- Selection is cleared after deletion.
+- Success message is displayed.
 - Tests pass.
