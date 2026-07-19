@@ -38,8 +38,7 @@ This repository contains the complete source code for the MVP version.
 
 ## Database
 
-* PostgreSQL
-* Supabase Cloud
+* Supabase PostgreSQL
 
 ## Authentication
 
@@ -114,6 +113,45 @@ Avoid implementing multiple major features simultaneously.
 
 ---
 
+# Environment Variables
+
+Before running the project for the first time, create local environment files from the provided templates.
+
+## Backend
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Configure the following variables:
+
+- `DATABASE_URL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+`DATABASE_URL` must point to your managed Supabase PostgreSQL instance (not a local database).
+
+Recommended format:
+
+`postgresql+psycopg://postgres:<db-password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require`
+
+## Frontend
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+Configure the following variables:
+
+- `VITE_API_BASE_URL`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Never commit `.env` files to the repository.
+
+---
+
 # Running the Project
 
 Frontend
@@ -129,6 +167,7 @@ Backend
 ```bash
 cd backend
 uv sync
+uv run alembic upgrade head
 uv run uvicorn app.main:app --reload
 ```
 

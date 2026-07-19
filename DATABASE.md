@@ -380,3 +380,9 @@ The schema intentionally allows future additions such as:
 - organization accounts
 
 without major database redesign.
+
+Development Environment
+
+The canonical development database is the managed PostgreSQL instance hosted by Supabase.
+
+Developers are not expected to run PostgreSQL locally during MVP development.

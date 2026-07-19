@@ -114,3 +114,37 @@ Sprint is complete when:
 - Frontend loads customers from backend.
 - Empty state is displayed correctly.
 - Tests pass.
+
+## Sprint Review
+
+Status: ✅ Accepted
+
+### Review Summary
+
+The sprint was successfully completed and accepted after review.
+
+### Delivered
+
+- Customer API
+- Customer Service
+- Customer Repository
+- Customers page
+- Sidebar navigation
+- End-to-end integration:
+  React → FastAPI → SQLAlchemy → Supabase PostgreSQL
+
+### Infrastructure Improvements
+
+- Removed local PostgreSQL assumptions.
+- Aligned the backend with ADR-003 (Supabase PostgreSQL).
+- Configured CORS for local development.
+- Verified end-to-end authentication and database connectivity.
+
+### Notes
+
+The initial review revealed two infrastructure issues:
+
+- CORS configuration
+- Incorrect database connection strategy
+
+Both issues were resolved without changing business functionality.

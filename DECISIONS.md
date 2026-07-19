@@ -146,31 +146,9 @@ Establishes a scalable authentication boundary without introducing login/registe
 Status:
 Accepted
 
-## ADR-010
-
-### Title
-
-Authentication handled entirely by Supabase
-
-### Decision
-
-The frontend communicates directly with Supabase Authentication.
-
-FastAPI does not implement authentication logic.
-
-Backend trusts JWT tokens issued by Supabase.
-
-### Reason
-
-This significantly reduces backend complexity while leveraging a secure, managed authentication provider.
-
-### Status
-
-Accepted
-
 ---
 
-## ADR-012
+## ADR-010
 
 Title: Authentication Form and Routing Architecture
 

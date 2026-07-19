@@ -4,18 +4,18 @@ alwaysApply: true
 
 # Data Wildcat Engineering Rules
 
-Version: 1.0
+Version: 2.0
 
 These rules apply to every software project developed by Data Wildcat.
 
 The objective is to build software that is:
 
-* Simple
-* Maintainable
-* Secure
-* Production-ready
-* Easy to extend
-* AI-friendly
+- Simple
+- Maintainable
+- Secure
+- Production-ready
+- Easy to extend
+- AI-friendly
 
 ---
 
@@ -47,11 +47,9 @@ The MVP should be deliverable within days, not months.
 
 Whenever a new feature is proposed ask:
 
-Does this help deliver value to the customer today?
+> Does this help deliver value to the customer today?
 
-If not,
-
-move it to the backlog.
+If not, move it to the backlog.
 
 ---
 
@@ -79,12 +77,12 @@ Not a replacement for engineering judgement.
 
 Use AI to:
 
-* generate code
-* explain concepts
-* review implementations
-* generate documentation
-* generate tests
-* refactor code
+- generate code
+- explain concepts
+- review implementations
+- generate documentation
+- generate tests
+- refactor code
 
 Never blindly accept generated code.
 
@@ -118,32 +116,36 @@ Database access must never contain business logic.
 
 Preferred stack:
 
-* FastAPI
-* SQLAlchemy
-* Alembic
-* PostgreSQL
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL
 
-Structure:
+Architecture:
 
-Routers
-
-↓
-
-Services
+Router
 
 ↓
 
-Repositories
+Service
+
+↓
+
+Repository
 
 ↓
 
 Database
 
-Routers should stay thin.
+Rules:
 
-Services contain business logic.
-
-Repositories only access the database.
+- Routers should stay thin.
+- Routers must never access repositories directly.
+- Services contain business logic.
+- Services orchestrate business workflows.
+- Every business workflow starts in the Service layer.
+- Repositories are responsible only for data access.
+- Repositories must never call other repositories.
 
 ---
 
@@ -151,25 +153,19 @@ Repositories only access the database.
 
 Preferred stack:
 
-* React
-* TypeScript
-* Tailwind CSS
+- React
+- TypeScript
+- Tailwind CSS
 
 Guidelines:
 
-Small components.
-
-Reusable components.
-
-Composition over inheritance.
-
-Prefer hooks.
-
-Avoid duplicated logic.
-
-Keep components focused.
-
-Separate UI from business logic.
+- Small components.
+- Reusable components.
+- Composition over inheritance.
+- Prefer hooks.
+- Avoid duplicated logic.
+- Keep components focused.
+- Separate UI from business logic.
 
 ---
 
@@ -186,6 +182,22 @@ Never store duplicated information.
 Generate migrations for every schema change.
 
 Never manually modify production schemas.
+
+Database access must always follow:
+
+Router
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Database
 
 ---
 
@@ -219,8 +231,8 @@ Secrets must never be committed to Git.
 
 Use:
 
-* .env
-* Secret Managers
+- `.env`
+- Secret Managers
 
 Encrypt sensitive credentials before storing.
 
@@ -254,9 +266,9 @@ Document APIs.
 
 Errors should be:
 
-* informative
-* consistent
-* logged
+- informative
+- consistent
+- logged
 
 Users should receive understandable messages.
 
@@ -268,17 +280,12 @@ Internal exceptions must never expose implementation details.
 
 Code should be:
 
-Simple.
-
-Readable.
-
-Maintainable.
-
-Meaningful names.
-
-Small functions.
-
-Small classes.
+- Simple
+- Readable
+- Maintainable
+- Meaningfully named
+- Composed of small functions
+- Composed of small classes
 
 Avoid duplication.
 
@@ -292,17 +299,38 @@ Computers second.
 
 Every project should contain:
 
-README.md
-
-PRD.md
-
-TASKS.md
+- README.md
+- PRD.md
+- TASKS.md
 
 Documentation should stay synchronized with the implementation.
 
+Architectural Decision Records (ADRs) are the highest source of truth.
+
+If any implementation, environment configuration, README, sprint instructions or generated code conflicts with an accepted ADR, implementation must stop until an architectural decision is made.
+
 ---
 
-# 16. Git
+# 16. Infrastructure
+
+Infrastructure should remain as simple as possible.
+
+The AI must never introduce new infrastructure components unless they are explicitly approved by the project documentation or an accepted ADR.
+
+Examples include:
+
+- databases
+- caches
+- message brokers
+- object storage
+- search engines
+- background workers
+
+If additional infrastructure is required, stop implementation and request an architectural decision before proceeding.
+
+---
+
+# 17. Git
 
 Commit often.
 
@@ -310,11 +338,11 @@ Keep commits focused.
 
 One logical change per commit.
 
-Meaningful commit messages.
+Use meaningful commit messages.
 
 ---
 
-# 17. Testing
+# 18. Testing
 
 Critical business logic should be testable.
 
@@ -324,7 +352,7 @@ Manual testing is acceptable for MVP UI.
 
 ---
 
-# 18. Performance
+# 19. Performance
 
 Do not optimize prematurely.
 
@@ -334,17 +362,14 @@ Optimize only proven bottlenecks.
 
 ---
 
-# 19. User Experience
+# 20. User Experience
 
 Software should be:
 
-Simple.
-
-Predictable.
-
-Fast.
-
-Minimal.
+- Simple
+- Predictable
+- Fast
+- Minimal
 
 Avoid unnecessary animations.
 
@@ -354,7 +379,7 @@ Reduce cognitive load.
 
 ---
 
-# 20. Future Development
+# 21. Future Development
 
 Every project should be easy to extend.
 
@@ -368,55 +393,46 @@ Not castles.
 
 ---
 
-# 21. Definition of Success
+# 22. Definition of Success
 
 Success is not measured by:
 
-* number of technologies
-* architecture diagrams
-* code size
+- number of technologies
+- architecture diagrams
+- code size
 
 Success is measured by:
 
-* working software
-* satisfied customers
-* maintainable code
-* fast delivery
-* business value
+- working software
+- satisfied customers
+- maintainable code
+- fast delivery
+- business value
 
 ---
 
-# 22. Final Principle
+# 23. Architecture Reviews
+
+When implementation reveals inconsistencies, ambiguity or architectural trade-offs, stop and request clarification before proceeding.
+
+Never guess architectural decisions.
+
+Implementation should follow approved documentation rather than assumptions.
+
+Architectural discussions are encouraged before implementation.
+
+It is always better to pause and ask than to implement the wrong solution.
+
+---
+
+# 24. Final Principle
 
 Always ask:
 
-"If I were paying for this software, would I be happy with today's progress?"
+> "If I were paying for this software, would I be happy with today's progress?"
 
-If the answer is no,
+If the answer is no:
 
-simplify,
-
-focus,
-
-and deliver value.
-
-Never place database access inside FastAPI routers.
-
-The architecture must always follow:
-
-Router
-→ Service
-→ Repository
-→ Database
-
-Business logic belongs only to the Service layer.
-
-Repositories are responsible only for data access.
-
-Services orchestrate business logic.
-
-Repositories never call other repositories.
-
-Routers never access repositories directly.
-
-Every business workflow starts in the Service layer.
+- simplify
+- focus
+- deliver value
