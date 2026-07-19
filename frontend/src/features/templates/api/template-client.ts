@@ -1,5 +1,7 @@
 import type {
   TemplateDeleteResponse,
+  TemplateRenderPayload,
+  TemplateRenderResponse,
   TemplatesListResponse,
   TemplateResponse,
   TemplateUpsertPayload,
@@ -109,4 +111,28 @@ export async function deleteTemplate(
   }
 
   return (await response.json()) as TemplateDeleteResponse
+}
+
+export async function renderTemplate(
+  accessToken: string,
+  payload: TemplateRenderPayload,
+): Promise<TemplateRenderResponse> {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/templates/render`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const errorPayload = (await response.json().catch(() => null)) as ErrorEnvelope | null
+    throw new TemplatesApiError(
+      errorPayload?.error?.code ?? 'TEMPLATE_RENDER_FAILED',
+      errorPayload?.error?.message ?? 'Unable to render template preview.',
+    )
+  }
+
+  return (await response.json()) as TemplateRenderResponse
 }

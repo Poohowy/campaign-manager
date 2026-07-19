@@ -54,3 +54,13 @@ class TemplateUpdateRequest(BaseModel):
 
 class TemplateDeleteResult(BaseModel):
     deleted: bool
+
+
+class TemplateRenderRequest(BaseModel):
+    template_id: uuid.UUID
+    customer_id: uuid.UUID
+
+
+class TemplateRenderResult(BaseModel):
+    subject: str
+    body: str

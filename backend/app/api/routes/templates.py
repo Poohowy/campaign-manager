@@ -7,15 +7,22 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import get_current_user_id
 from app.db.session import get_db_session
+from app.repositories.customer_repository import CustomerRepository
 from app.repositories.template_repository import TemplateRepository
 from app.schemas.api import DataResponse, ErrorBody, ErrorResponse
 from app.schemas.template import (
     TemplateCreateRequest,
     TemplateDeleteResult,
     TemplateRead,
+    TemplateRenderRequest,
+    TemplateRenderResult,
     TemplateUpdateRequest,
 )
-from app.services.template_service import TemplateService
+from app.services.template_service import (
+    CustomerNotFoundError,
+    TemplateNotFoundError,
+    TemplateService,
+)
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 CurrentUserDep = Annotated[uuid.UUID | None, Depends(get_current_user_id)]
@@ -23,7 +30,10 @@ DBSessionDep = Annotated[Session, Depends(get_db_session)]
 
 
 def get_template_service(session: DBSessionDep) -> TemplateService:
-    return TemplateService(TemplateRepository(session))
+    return TemplateService(
+        template_repository=TemplateRepository(session),
+        customer_repository=CustomerRepository(session),
+    )
 
 
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]
@@ -82,6 +92,25 @@ def create_template(
     return DataResponse[TemplateRead](
         data=TemplateRead.model_validate(template, from_attributes=True)
     )
+
+
+@router.post("/render", response_model=DataResponse[TemplateRenderResult])
+def render_template(
+    payload: TemplateRenderRequest,
+    user_id: CurrentUserDep,
+    service: TemplateServiceDep,
+):
+    if user_id is None:
+        return _error_response(401, "UNAUTHORIZED", "Unauthorized.")
+
+    try:
+        result = service.render_template(user_id=user_id, payload=payload)
+    except TemplateNotFoundError:
+        return _error_response(404, "TEMPLATE_NOT_FOUND", "Template not found.")
+    except CustomerNotFoundError:
+        return _error_response(404, "CUSTOMER_NOT_FOUND", "Customer not found.")
+
+    return DataResponse[TemplateRenderResult](data=result)
 
 
 @router.put("/{template_id}", response_model=DataResponse[TemplateRead])

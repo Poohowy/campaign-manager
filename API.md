@@ -232,6 +232,32 @@ Returns:
 
 ---
 
+## POST /templates/render
+
+Renders a template using data from the selected customer.
+
+Request:
+
+```json
+{
+  "template_id": "uuid",
+  "customer_id": "uuid"
+}
+```
+
+Returns:
+
+```json
+{
+  "data": {
+    "subject": "Hello ABC Ltd",
+    "body": "# Welcome\n\nThank you for your interest."
+  }
+}
+```
+
+---
+
 ## PUT /templates/{id}
 
 Updates an existing template.

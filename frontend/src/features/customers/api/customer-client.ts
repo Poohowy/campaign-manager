@@ -17,8 +17,41 @@ export class CustomersApiError extends Error {
   }
 }
 
-export async function fetchCustomers(accessToken: string): Promise<CustomersListResult> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/customers`, {
+type FetchCustomersOptions = {
+  page?: number
+  pageSize?: number
+  search?: string
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export async function fetchCustomers(
+  accessToken: string,
+  options: FetchCustomersOptions = {},
+): Promise<CustomersListResult> {
+  const params = new URLSearchParams()
+  if (options.page) {
+    params.set('page', String(options.page))
+  }
+  if (options.pageSize) {
+    params.set('page_size', String(options.pageSize))
+  }
+  if (options.search) {
+    params.set('search', options.search)
+  }
+  if (options.sort) {
+    params.set('sort', options.sort)
+  }
+  if (options.order) {
+    params.set('order', options.order)
+  }
+
+  const query = params.toString()
+  const url = query
+    ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/customers?${query}`
+    : `${import.meta.env.VITE_API_BASE_URL}/api/v1/customers`
+
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,

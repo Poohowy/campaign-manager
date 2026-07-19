@@ -28,3 +28,15 @@ export type TemplateUpsertPayload = {
   subject: string
   body_markdown: string
 }
+
+export type TemplateRenderPayload = {
+  template_id: string
+  customer_id: string
+}
+
+export type TemplateRenderResponse = {
+  data: {
+    subject: string
+    body: string
+  }
+}

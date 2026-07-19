@@ -1,128 +1,150 @@
-# Sprint 8
+# Sprint 9
 
 ## Goal
 
-Implement the Template Management module.
+Implement Template Rendering and Variable Picker.
 
-Authenticated users should be able to create, edit, view and delete email templates.
+Users should be able to insert predefined variables into email templates and preview the rendered result using data from a selected customer.
 
-No variable rendering or preview should be implemented in this sprint.
-
----
-
-## Tasks
-
-### Backend
-
-Implement CRUD endpoints:
-
-GET /api/v1/templates
-
-GET /api/v1/templates/{id}
-
-POST /api/v1/templates
-
-PUT /api/v1/templates/{id}
-
-DELETE /api/v1/templates/{id}
-
-Requirements:
-
-- All templates belong to the authenticated user.
-- Follow Router → Service → Repository → Database.
-- Use standardized API response envelopes.
-- Ignore requests for templates belonging to another user.
+No email sending or SMTP functionality should be implemented in this sprint.
 
 ---
 
-### Database
+## Backend
 
-Use the existing templates table.
+### Template Rendering
 
-No schema changes.
+Implement:
+
+```
+POST /api/v1/templates/render
+```
+
+The endpoint accepts:
+
+```json
+{
+  "template_id": "uuid",
+  "customer_id": "uuid"
+}
+```
+
+The backend must:
+
+- load the template
+- load the selected customer
+- replace supported variables
+- return the rendered subject and body
+
+The rendering logic belongs exclusively to the Service layer.
 
 ---
 
-### Frontend
+### Supported Variables
 
-Create a new Templates page.
+Support the following variables:
 
-The page should display all templates in a table.
+- {{company_name}}
+- {{contact_name}}
+- {{email}}
+- {{phone}}
+- {{website}}
+- {{city}}
+- {{country}}
 
-Columns:
-
-- Name
-- Subject
-- Last Updated
-
-Actions:
-
-- Create
-- Edit
-- Delete
+Unknown variables must remain unchanged.
 
 ---
 
-### Template Form
+## Frontend
 
-Create a reusable form supporting both Create and Edit modes.
+### Variable Picker
 
-Fields:
+Add an **Insert Variable** button next to:
 
-- Template Name
-- Subject
-- Body (Markdown)
-
-Validation:
-
-Required:
-
-- Name
 - Subject
 - Body
 
----
+When clicked, display a list of supported variables.
 
-### Delete
+Selecting a variable inserts it at the current cursor position.
 
-Deleting a template must require confirmation.
-
-Use the existing Alert Dialog pattern introduced in Sprint 7.5.
+Users may still type variables manually.
 
 ---
 
-### UI
+### Template Preview
 
-Reuse existing UI components whenever possible.
+Add a **Preview** button.
 
-Reuse:
+When clicked:
 
-- Table
-- Button
-- Card
-- Alert Dialog
+- allow the user to choose one of their imported customers,
+- call the backend rendering endpoint,
+- display the rendered Subject and Body.
 
-The Templates page should visually match the Customers module.
+Preview must not save any changes.
 
 ---
 
-### Tests
+### Markdown Preview
+
+The template body should support two tabs:
+
+- Edit
+- Preview
+
+Preview renders Markdown as HTML.
+
+Editing remains in the existing textarea.
+
+---
+
+## Architecture
+
+Reuse the existing architecture:
+
+Router
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Database
+
+Requirements:
+
+- rendering logic belongs only to TemplateService,
+- routers remain thin,
+- repositories perform data access only,
+- all API responses use the standardized response envelope.
+
+---
+
+## Tests
 
 Backend:
 
-- create template
-- update template
-- delete template
-- list templates
-- ownership enforcement
+- render template successfully
+- replace supported variables
+- leave unknown variables unchanged
+- template ownership enforcement
+- customer ownership enforcement
 
 Frontend:
 
-- template list
-- create dialog
-- edit dialog
-- delete confirmation
-- automatic refresh
+- variable picker
+- variable insertion
+- markdown preview
+- template preview
+- rendered output
+- API integration
 
 ---
 
@@ -130,12 +152,14 @@ Frontend:
 
 Do not implement:
 
-- Variable rendering
-- Variable picker
-- Template preview
+- SMTP
+- Email sending
+- Campaigns
 - Rich text editor
-- Version history
-- Duplicate template
+- WYSIWYG editor
+- Custom field variables
+- Saving preview state
+- Template versioning
 
 ---
 
@@ -143,9 +167,11 @@ Do not implement:
 
 Sprint is complete when:
 
-- Templates can be created.
-- Templates can be edited.
-- Templates can be deleted.
-- Template list refreshes automatically.
-- Confirmation dialog works.
-- Tests pass.
+- variables can be inserted using the Variable Picker,
+- variables are inserted at the cursor position,
+- templates can be rendered using a selected customer,
+- Markdown Preview works,
+- rendering is performed by the backend,
+- unknown variables do not cause errors,
+- all tests pass,
+- the application remains fully functional.

@@ -11,6 +11,8 @@ from app.schemas.template import (
     TemplateCreateRequest,
     TemplateDeleteResult,
     TemplateRead,
+    TemplateRenderRequest,
+    TemplateRenderResult,
     TemplateUpdate,
     TemplateUpdateRequest,
 )
@@ -32,6 +34,8 @@ __all__ = [
     "TemplateCreateRequest",
     "TemplateDeleteResult",
     "TemplateRead",
+    "TemplateRenderRequest",
+    "TemplateRenderResult",
     "TemplateUpdate",
     "TemplateUpdateRequest",
 ]
