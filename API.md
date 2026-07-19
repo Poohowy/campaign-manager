@@ -89,9 +89,42 @@ Returns customer details.
 
 ---
 
+## POST /customers/import/preview
+
+Uploads a CSV file and returns a preview without writing any data to the database.
+
+Request:
+
+```
+multipart/form-data
+```
+
+Response:
+
+```json
+{
+  "headers": [
+    "company_name",
+    "email",
+    "city"
+  ],
+  "preview": [
+    {
+      "company_name": "ABC",
+      "email": "office@abc.com"
+    }
+  ],
+  "row_count": 156
+}
+```
+
+No data is persisted.
+
+---
+
 ## POST /customers/import
 
-Imports customers from a CSV or XLSX file.
+Imports customers using the selected column mapping.
 
 The backend performs an upsert using the configured unique identifier.
 
@@ -382,3 +415,4 @@ The following functionality is intentionally excluded from the MVP:
 - CRM integrations
 - Webhooks
 - Organization / Team accounts
+

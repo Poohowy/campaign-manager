@@ -22,6 +22,15 @@ vi.mock('../../features/customers/hooks/useCustomersQuery', () => ({
   useCustomersQuery: () => customersQueryState,
 }))
 
+vi.mock('../../features/auth/hooks/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    session: { access_token: 'token' },
+    user: null,
+  }),
+}))
+
 describe('CustomersPage', () => {
   it('shows empty state when no customers exist', () => {
     customersQueryState = {
@@ -41,5 +50,6 @@ describe('CustomersPage', () => {
     render(<CustomersPage />)
 
     expect(screen.getByText('Your customer list is currently empty.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Import Customers' })).toBeInTheDocument()
   })
 })

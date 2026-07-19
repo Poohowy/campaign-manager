@@ -147,6 +147,10 @@ Rules:
 - Repositories are responsible only for data access.
 - Repositories must never call other repositories.
 
+When implementing file parsers, prefer robust standard library capabilities before writing custom parsing logic.
+
+For CSV files, use csv.Sniffer whenever appropriate.
+
 ---
 
 # 7. Frontend Standards

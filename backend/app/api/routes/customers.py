@@ -2,7 +2,7 @@ import math
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -17,11 +17,17 @@ from app.schemas.api import (
     PaginationMeta,
 )
 from app.schemas.customer import CustomerRead
+from app.schemas.customer_import import CustomerImportPreview
+from app.services.customer_import_service import (
+    CustomerImportService,
+    CustomerImportValidationError,
+)
 from app.services.customer_service import CustomerService
 
 router = APIRouter(prefix="/customers", tags=["customers"])
 CurrentUserDep = Annotated[uuid.UUID | None, Depends(get_current_user_id)]
 DBSessionDep = Annotated[Session, Depends(get_db_session)]
+CSVFileDep = Annotated[UploadFile | None, File()]
 
 
 def get_customer_service(session: DBSessionDep) -> CustomerService:
@@ -29,6 +35,13 @@ def get_customer_service(session: DBSessionDep) -> CustomerService:
 
 
 CustomerServiceDep = Annotated[CustomerService, Depends(get_customer_service)]
+
+
+def get_customer_import_service() -> CustomerImportService:
+    return CustomerImportService()
+
+
+CustomerImportServiceDep = Annotated[CustomerImportService, Depends(get_customer_import_service)]
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
@@ -89,3 +102,24 @@ def get_customer_by_id(
     return DataResponse[CustomerRead](
         data=CustomerRead.model_validate(customer, from_attributes=True)
     )
+
+
+@router.post("/import/preview", response_model=DataResponse[CustomerImportPreview])
+async def preview_customer_import(
+    user_id: CurrentUserDep,
+    service: CustomerImportServiceDep,
+    file: CSVFileDep = None,
+):
+    if user_id is None:
+        return _error_response(401, "UNAUTHORIZED", "Unauthorized.")
+
+    if file is None:
+        return _error_response(400, "CSV_FILE_REQUIRED", "CSV file is required.")
+
+    file_content = await file.read()
+    try:
+        preview = service.generate_preview(file_content=file_content)
+    except CustomerImportValidationError as error:
+        return _error_response(400, error.code, error.message)
+
+    return DataResponse[CustomerImportPreview](data=preview)

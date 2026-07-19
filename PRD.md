@@ -116,11 +116,11 @@ After uploading a file, the user maps spreadsheet columns to application fields.
 Required mappings:
 
 * External Identifier
+* Company Name
 * Email
 
 Optional mappings:
 
-* Company Name
 * Contact Name
 * Phone
 
