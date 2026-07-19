@@ -1,4 +1,9 @@
-from app.schemas.campaign import CampaignCreateRequest, CampaignDeleteResult, CampaignRead
+from app.schemas.campaign import (
+    CampaignCreateRequest,
+    CampaignDeleteResult,
+    CampaignRead,
+    CampaignSendResult,
+)
 from app.schemas.campaign_message import (
     CampaignMessageCreate,
     CampaignMessageRead,
@@ -30,6 +35,7 @@ __all__ = [
     "CampaignMessageRead",
     "CampaignMessageUpdate",
     "CampaignRead",
+    "CampaignSendResult",
     "CustomerCreate",
     "CustomerRead",
     "CustomerUpdate",

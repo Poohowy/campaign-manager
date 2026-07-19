@@ -1,7 +1,9 @@
 import type {
   CampaignCreatePayload,
   CampaignDeleteResponse,
+  CampaignMessagesResponse,
   CampaignResponse,
+  CampaignSendResponse,
   CampaignsListResponse,
 } from '../types/campaign'
 
@@ -106,4 +108,54 @@ export async function deleteCampaign(
   }
 
   return (await response.json()) as CampaignDeleteResponse
+}
+
+export async function sendCampaign(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignSendResponse> {
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/campaigns/${campaignId}/send`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ErrorEnvelope | null
+    throw new CampaignsApiError(
+      payload?.error?.code ?? 'CAMPAIGN_SEND_FAILED',
+      payload?.error?.message ?? 'Unable to send campaign.',
+    )
+  }
+
+  return (await response.json()) as CampaignSendResponse
+}
+
+export async function fetchCampaignMessages(
+  accessToken: string,
+  campaignId: string,
+): Promise<CampaignMessagesResponse> {
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/campaigns/${campaignId}/messages`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ErrorEnvelope | null
+    throw new CampaignsApiError(
+      payload?.error?.code ?? 'CAMPAIGN_MESSAGES_FETCH_FAILED',
+      payload?.error?.message ?? 'Unable to load campaign messages.',
+    )
+  }
+
+  return (await response.json()) as CampaignMessagesResponse
 }

@@ -24,6 +24,10 @@ class SMTPTestFailedError(Exception):
     pass
 
 
+class SMTPSendFailedError(Exception):
+    pass
+
+
 class SMTPService:
     def __init__(self, repository: SMTPSettingsRepository, encryption_key: str | None):
         self.repository = repository
@@ -68,6 +72,26 @@ class SMTPService:
         self.repository.update(existing, **values)
 
     def send_test_email(self, *, user_id: uuid.UUID, payload: SMTPTestRequest) -> None:
+        try:
+            self.send_email(
+                user_id=user_id,
+                recipient=str(payload.recipient),
+                subject="Campaign Manager SMTP Test",
+                body="This is a test email sent from Campaign Manager.",
+            )
+        except SMTPSendFailedError as error:
+            raise SMTPTestFailedError(
+                "Unable to send test email. Check SMTP settings and try again."
+            ) from error
+
+    def send_email(
+        self,
+        *,
+        user_id: uuid.UUID,
+        recipient: str,
+        subject: str,
+        body: str,
+    ) -> None:
         settings = self.repository.get_by_user(user_id)
         if settings is None:
             raise SMTPSettingsNotFoundError
@@ -80,10 +104,10 @@ class SMTPService:
 
         password = self.decrypt_password(settings.password_encrypted or "")
         message = EmailMessage()
-        message["Subject"] = "Campaign Manager SMTP Test"
+        message["Subject"] = subject
         message["From"] = settings.from_email
-        message["To"] = str(payload.recipient)
-        message.set_content("This is a test email sent from Campaign Manager.")
+        message["To"] = recipient
+        message.set_content(body)
 
         try:
             with smtplib.SMTP(settings.host, int(settings.port), timeout=15) as smtp:
@@ -92,8 +116,8 @@ class SMTPService:
                 smtp.login(settings.username, password)
                 smtp.send_message(message)
         except (smtplib.SMTPException, OSError, ValueError) as error:
-            raise SMTPTestFailedError(
-                "Unable to send test email. Check SMTP settings and try again."
+            raise SMTPSendFailedError(
+                "Unable to send email. Check SMTP settings and try again."
             ) from error
 
     def encrypt_password(self, password: str) -> str:

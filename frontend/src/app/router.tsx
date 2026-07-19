@@ -5,7 +5,7 @@ import { ForgotPasswordRoute } from '../routes/auth/forgot-password'
 import { LoginRoute } from '../routes/auth/login'
 import { RegisterRoute } from '../routes/auth/register'
 import { AuthRoute } from '../routes/auth/route'
-import { CampaignsRoute } from '../routes/campaigns/route'
+import { CampaignDetailsRoute, CampaignsRoute } from '../routes/campaigns/route'
 import { CustomersRoute } from '../routes/customers/route'
 import { DashboardRoute } from '../routes/dashboard/route'
 import { SmtpRoute } from '../routes/smtp/route'
@@ -55,6 +55,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <CampaignsRoute />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/campaigns/:campaignId',
+    element: (
+      <ProtectedRoute>
+        <CampaignDetailsRoute />
       </ProtectedRoute>
     ),
   },

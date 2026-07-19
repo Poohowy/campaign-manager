@@ -61,3 +61,14 @@ class CampaignMessageRepository(BaseRepository[CampaignMessage]):
         )
         rows = self.session.execute(stmt).all()
         return [customer_id for (customer_id,) in rows if customer_id is not None]
+
+    def list_by_campaign_id(
+        self,
+        user_id: uuid.UUID,
+        campaign_id: uuid.UUID,
+    ) -> list[CampaignMessage]:
+        stmt: Select[tuple[CampaignMessage]] = select(CampaignMessage).where(
+            CampaignMessage.user_id == user_id,
+            CampaignMessage.campaign_id == campaign_id,
+        )
+        return list(self.session.scalars(stmt))

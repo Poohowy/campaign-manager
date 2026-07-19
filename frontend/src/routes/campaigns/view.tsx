@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Alert } from '../../components/ui/alert'
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ import {
   CampaignsApiError,
   createCampaign,
   deleteCampaign,
+  sendCampaign,
 } from '../../features/campaigns/api/campaign-client'
 import { CampaignForm, type CampaignFormValues } from '../../features/campaigns/components/campaign-form'
 import { useCampaignsQuery } from '../../features/campaigns/hooks/useCampaignsQuery'
@@ -50,6 +52,7 @@ export function CampaignsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [campaignPendingDelete, setCampaignPendingDelete] = useState<Campaign | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [sendingCampaignId, setSendingCampaignId] = useState<string | null>(null)
 
   const campaigns = campaignsQuery.data?.data ?? []
 
@@ -162,6 +165,34 @@ export function CampaignsPage() {
     }
   }
 
+  const handleSendCampaign = async (campaign: Campaign) => {
+    if (!session?.access_token) {
+      setPageError('You must be authenticated to send campaigns.')
+      return
+    }
+
+    setSendingCampaignId(campaign.id)
+    setPageError(null)
+    setPageSuccess(null)
+    try {
+      const response = await sendCampaign(session.access_token, campaign.id)
+      if (response.data.failed > 0) {
+        setPageError('Campaign finished with failures. Check campaign details for errors.')
+      } else {
+        setPageSuccess('Campaign sent successfully.')
+      }
+      await campaignsQuery.refetch()
+    } catch (error) {
+      if (error instanceof CampaignsApiError) {
+        setPageError(error.message)
+      } else {
+        setPageError('Unable to send campaign.')
+      }
+    } finally {
+      setSendingCampaignId(null)
+    }
+  }
+
   if (campaignsQuery.isLoading) {
     return (
       <Card>
@@ -214,7 +245,7 @@ export function CampaignsPage() {
                   <TableHead>Number of Recipients</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead className="w-40">Actions</TableHead>
+                  <TableHead className="w-56">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -226,9 +257,25 @@ export function CampaignsPage() {
                     <TableCell className="capitalize">{campaign.status}</TableCell>
                     <TableCell>{formatCreatedAt(campaign.created_at)}</TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm" onClick={() => openDeleteDialog(campaign)}>
-                        Delete
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild variant="outline" size="sm">
+                          <Link to={`/campaigns/${campaign.id}`}>Details</Link>
+                        </Button>
+                        {campaign.status === 'draft' ? (
+                          <Button
+                            size="sm"
+                            disabled={sendingCampaignId !== null}
+                            onClick={() => {
+                              void handleSendCampaign(campaign)
+                            }}
+                          >
+                            {sendingCampaignId === campaign.id ? 'Sending...' : 'Send'}
+                          </Button>
+                        ) : null}
+                        <Button variant="outline" size="sm" onClick={() => openDeleteDialog(campaign)}>
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

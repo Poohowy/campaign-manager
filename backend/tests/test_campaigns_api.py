@@ -5,16 +5,19 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import get_current_user_id
 from app.api.routes.campaigns import get_campaign_service
-from app.db.enums import CampaignStatus
+from app.db.enums import CampaignMessageStatus, CampaignStatus
 from app.db.session import get_db_session
 from app.main import app
-from app.schemas.campaign import CampaignRead
+from app.schemas.campaign import CampaignRead, CampaignSendResult
+from app.schemas.campaign_message import CampaignMessageRead
 from app.services.campaign_service import (
     CampaignCustomerNotFoundError,
     CampaignCustomersRequiredError,
+    CampaignNotDraftError,
     CampaignNotFoundError,
     CampaignTemplateNotFoundError,
 )
+from app.services.smtp_service import SMTPSettingsNotFoundError
 
 
 def _fake_campaign(*, campaign_id: uuid.UUID, user_id: uuid.UUID, name: str) -> CampaignRead:
@@ -247,3 +250,136 @@ def test_create_campaign_requires_customer_ids() -> None:
             "message": "At least one customer ID is required.",
         }
     }
+
+
+def test_send_campaign_returns_send_result() -> None:
+    user_id = uuid.uuid4()
+    campaign_id = uuid.uuid4()
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+    class FakeService:
+        def send_campaign(self, *, user_id: uuid.UUID, campaign_id: uuid.UUID):
+            return CampaignSendResult(
+                campaign_id=campaign_id,
+                status=CampaignStatus.completed,
+                sent=2,
+                failed=0,
+            )
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+    app.dependency_overrides[get_campaign_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.post(f"/api/v1/campaigns/{campaign_id}/send")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": {
+            "campaign_id": str(campaign_id),
+            "status": "completed",
+            "sent": 2,
+            "failed": 0,
+        }
+    }
+
+
+def test_send_campaign_returns_conflict_when_not_draft() -> None:
+    user_id = uuid.uuid4()
+    campaign_id = uuid.uuid4()
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+    class FakeService:
+        def send_campaign(self, *, user_id: uuid.UUID, campaign_id: uuid.UUID):
+            raise CampaignNotDraftError
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+    app.dependency_overrides[get_campaign_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.post(f"/api/v1/campaigns/{campaign_id}/send")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "error": {
+            "code": "CAMPAIGN_NOT_DRAFT",
+            "message": "Only draft campaigns can be sent.",
+        }
+    }
+
+
+def test_send_campaign_requires_smtp_settings() -> None:
+    user_id = uuid.uuid4()
+    campaign_id = uuid.uuid4()
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+    class FakeService:
+        def send_campaign(self, *, user_id: uuid.UUID, campaign_id: uuid.UUID):
+            raise SMTPSettingsNotFoundError
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+    app.dependency_overrides[get_campaign_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.post(f"/api/v1/campaigns/{campaign_id}/send")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": {
+            "code": "SMTP_SETTINGS_NOT_FOUND",
+            "message": "SMTP settings are not configured.",
+        }
+    }
+
+
+def test_list_campaign_messages_returns_data_envelope() -> None:
+    user_id = uuid.uuid4()
+    campaign_id = uuid.uuid4()
+
+    class FakeService:
+        def list_campaign_messages(self, *, user_id: uuid.UUID, campaign_id: uuid.UUID):
+            return [
+                CampaignMessageRead(
+                    id=uuid.uuid4(),
+                    user_id=user_id,
+                    campaign_id=campaign_id,
+                    customer_id=uuid.uuid4(),
+                    email="recipient@example.com",
+                    subject="Hello",
+                    body_markdown="Body",
+                    rendered_variables={},
+                    status=CampaignMessageStatus.sent,
+                    error_message=None,
+                    sent_at=datetime.now(UTC),
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
+                )
+            ]
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_campaign_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.get(f"/api/v1/campaigns/{campaign_id}/messages")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["data"][0]["email"] == "recipient@example.com"

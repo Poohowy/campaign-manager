@@ -1,10 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
 import { CampaignsPage } from './view'
 
-const { createCampaignMock, deleteCampaignMock } = vi.hoisted(() => ({
+const { createCampaignMock, deleteCampaignMock, sendCampaignMock } = vi.hoisted(() => ({
   createCampaignMock: vi.fn(),
   deleteCampaignMock: vi.fn(),
+  sendCampaignMock: vi.fn(),
 }))
 
 const { fetchTemplatesMock } = vi.hoisted(() => ({
@@ -57,6 +59,7 @@ vi.mock('../../features/campaigns/api/campaign-client', () => {
     CampaignsApiError,
     createCampaign: createCampaignMock,
     deleteCampaign: deleteCampaignMock,
+    sendCampaign: sendCampaignMock,
   }
 })
 
@@ -78,9 +81,17 @@ vi.mock('../../features/auth/hooks/useAuth', () => ({
 }))
 
 describe('CampaignsPage', () => {
+  const renderPage = () =>
+    render(
+      <MemoryRouter>
+        <CampaignsPage />
+      </MemoryRouter>,
+    )
+
   beforeEach(() => {
     createCampaignMock.mockReset()
     deleteCampaignMock.mockReset()
+    sendCampaignMock.mockReset()
     fetchTemplatesMock.mockReset()
     fetchCustomersMock.mockReset()
   })
@@ -110,7 +121,7 @@ describe('CampaignsPage', () => {
       },
     }
 
-    render(<CampaignsPage />)
+    renderPage()
 
     expect(screen.getByText('Campaigns')).toBeInTheDocument()
     expect(screen.getByText('July Campaign')).toBeInTheDocument()
@@ -167,7 +178,7 @@ describe('CampaignsPage', () => {
       data: { id: 'cmp-1' },
     })
 
-    render(<CampaignsPage />)
+    renderPage()
     fireEvent.click(screen.getByRole('button', { name: 'Create Campaign' }))
 
     await waitFor(() => {
@@ -249,7 +260,7 @@ describe('CampaignsPage', () => {
       },
     })
 
-    render(<CampaignsPage />)
+    renderPage()
     fireEvent.click(screen.getByRole('button', { name: 'Create Campaign' }))
 
     await waitFor(() => {
@@ -299,7 +310,7 @@ describe('CampaignsPage', () => {
       data: { deleted: true },
     })
 
-    render(<CampaignsPage />)
+    renderPage()
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(screen.getByText('Delete Campaign')).toBeInTheDocument()
@@ -311,5 +322,50 @@ describe('CampaignsPage', () => {
     })
     expect(deleteCampaignMock).toHaveBeenCalledWith('token', 'cmp-1')
     expect(screen.getByText('Campaign deleted successfully.')).toBeInTheDocument()
+  })
+
+  it('sends draft campaign and refreshes list', async () => {
+    const refetchMock = vi.fn().mockResolvedValue(undefined)
+    campaignsQueryState = {
+      isLoading: false,
+      isError: false,
+      refetch: refetchMock,
+      data: {
+        data: [
+          {
+            id: 'cmp-1',
+            user_id: 'u-1',
+            template_id: 't-1',
+            template_name: 'Welcome',
+            name: 'July Campaign',
+            status: 'draft',
+            recipients_count: 2,
+            customer_ids: ['c-1', 'c-2'],
+            created_at: '2026-07-19T12:00:00.000Z',
+            started_at: null,
+            finished_at: null,
+            updated_at: '2026-07-19T12:00:00.000Z',
+          },
+        ],
+      },
+    }
+    sendCampaignMock.mockResolvedValueOnce({
+      data: {
+        campaign_id: 'cmp-1',
+        status: 'completed',
+        sent: 2,
+        failed: 0,
+      },
+    })
+
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    await waitFor(() => {
+      expect(sendCampaignMock).toHaveBeenCalledTimes(1)
+      expect(refetchMock).toHaveBeenCalledTimes(1)
+    })
+    expect(sendCampaignMock).toHaveBeenCalledWith('token', 'cmp-1')
+    expect(screen.getByText('Campaign sent successfully.')).toBeInTheDocument()
   })
 })

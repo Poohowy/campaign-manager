@@ -1,11 +1,20 @@
 import uuid
+from datetime import UTC, datetime
 
 from app.db.enums import CampaignMessageStatus, CampaignStatus
+from app.db.models import CampaignMessage
 from app.repositories.campaign_message_repository import CampaignMessageRepository
 from app.repositories.campaign_repository import CampaignRepository
 from app.repositories.customer_repository import CustomerRepository
 from app.repositories.template_repository import TemplateRepository
-from app.schemas.campaign import CampaignCreateRequest, CampaignRead
+from app.schemas.campaign import CampaignCreateRequest, CampaignRead, CampaignSendResult
+from app.schemas.template import TemplateRenderRequest
+from app.services.smtp_service import SMTPSendFailedError, SMTPService, SMTPSettingsNotFoundError
+from app.services.template_service import (
+    CustomerNotFoundError,
+    TemplateNotFoundError,
+    TemplateService,
+)
 
 
 class CampaignNotFoundError(Exception):
@@ -24,6 +33,10 @@ class CampaignCustomersRequiredError(Exception):
     pass
 
 
+class CampaignNotDraftError(Exception):
+    pass
+
+
 class CampaignService:
     def __init__(
         self,
@@ -31,11 +44,15 @@ class CampaignService:
         campaign_message_repository: CampaignMessageRepository,
         template_repository: TemplateRepository,
         customer_repository: CustomerRepository,
+        template_service: TemplateService,
+        smtp_service: SMTPService,
     ):
         self.campaign_repository = campaign_repository
         self.campaign_message_repository = campaign_message_repository
         self.template_repository = template_repository
         self.customer_repository = customer_repository
+        self.template_service = template_service
+        self.smtp_service = smtp_service
 
     def list_campaigns(self, *, user_id: uuid.UUID) -> list[CampaignRead]:
         campaigns = self.campaign_repository.list_by_user(user_id)
@@ -146,6 +163,118 @@ class CampaignService:
 
     def delete_campaign(self, *, user_id: uuid.UUID, campaign_id: uuid.UUID) -> bool:
         return self.campaign_repository.delete_by_user_and_id(user_id, campaign_id)
+
+    def list_campaign_messages(
+        self,
+        *,
+        user_id: uuid.UUID,
+        campaign_id: uuid.UUID,
+    ) -> list[CampaignMessage]:
+        campaign = self.campaign_repository.get_by_user_and_id(user_id, campaign_id)
+        if campaign is None:
+            raise CampaignNotFoundError
+        return self.campaign_message_repository.list_by_campaign_id(user_id, campaign_id)
+
+    def send_campaign(self, *, user_id: uuid.UUID, campaign_id: uuid.UUID) -> CampaignSendResult:
+        campaign = self.campaign_repository.get_by_user_and_id(user_id, campaign_id)
+        if campaign is None:
+            raise CampaignNotFoundError
+        if campaign.status != CampaignStatus.draft:
+            raise CampaignNotDraftError
+        if campaign.template_id is None:
+            raise CampaignTemplateNotFoundError
+
+        template = self.template_service.get_template_by_id(
+            user_id=user_id,
+            template_id=campaign.template_id,
+        )
+        if template is None:
+            raise CampaignTemplateNotFoundError
+        smtp_settings = self.smtp_service.get_settings(user_id=user_id)
+        if smtp_settings is None:
+            raise SMTPSettingsNotFoundError
+
+        messages = self.campaign_message_repository.list_by_campaign_id(user_id, campaign_id)
+        started_at = datetime.now(UTC)
+        self.campaign_repository.update(
+            campaign,
+            status=CampaignStatus.running,
+            started_at=started_at,
+        )
+
+        sent_count = 0
+        failed_count = 0
+        for message in messages:
+            attempted_at = datetime.now(UTC)
+            if message.customer_id is None or not message.email:
+                failed_count += 1
+                self.campaign_message_repository.update(
+                    message,
+                    status=CampaignMessageStatus.failed,
+                    sent_at=attempted_at,
+                    error_message="Campaign message is missing customer or recipient email.",
+                )
+                continue
+
+            try:
+                rendered = self.template_service.render_template(
+                    user_id=user_id,
+                    payload=TemplateRenderRequest(
+                        template_id=campaign.template_id,
+                        customer_id=message.customer_id,
+                    ),
+                )
+            except (TemplateNotFoundError, CustomerNotFoundError):
+                failed_count += 1
+                self.campaign_message_repository.update(
+                    message,
+                    status=CampaignMessageStatus.failed,
+                    sent_at=attempted_at,
+                    error_message="Unable to render template for this recipient.",
+                )
+                continue
+
+            try:
+                self.smtp_service.send_email(
+                    user_id=user_id,
+                    recipient=message.email,
+                    subject=rendered.subject,
+                    body=rendered.body,
+                )
+            except SMTPSendFailedError:
+                failed_count += 1
+                self.campaign_message_repository.update(
+                    message,
+                    subject=rendered.subject,
+                    body_markdown=rendered.body,
+                    status=CampaignMessageStatus.failed,
+                    sent_at=attempted_at,
+                    error_message="Unable to send email to this recipient.",
+                )
+                continue
+
+            sent_count += 1
+            self.campaign_message_repository.update(
+                message,
+                subject=rendered.subject,
+                body_markdown=rendered.body,
+                status=CampaignMessageStatus.sent,
+                sent_at=attempted_at,
+                error_message=None,
+            )
+
+        final_status = CampaignStatus.completed if failed_count == 0 else CampaignStatus.failed
+        self.campaign_repository.update(
+            campaign,
+            status=final_status,
+            finished_at=datetime.now(UTC),
+        )
+        return CampaignSendResult(
+            campaign_id=campaign.id,
+            status=final_status,
+            sent=sent_count,
+            failed=failed_count,
+        )
 
     @staticmethod
     def _normalize_customer_ids(customer_ids: list[uuid.UUID]) -> list[uuid.UUID]:

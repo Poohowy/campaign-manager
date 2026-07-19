@@ -37,3 +37,10 @@ class CampaignRead(BaseModel):
 
 class CampaignDeleteResult(BaseModel):
     deleted: bool
+
+
+class CampaignSendResult(BaseModel):
+    campaign_id: uuid.UUID
+    status: CampaignStatus
+    sent: int
+    failed: int

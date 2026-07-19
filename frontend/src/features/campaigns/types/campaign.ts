@@ -1,4 +1,5 @@
 export type CampaignStatus = 'draft' | 'running' | 'completed' | 'failed'
+export type CampaignMessageStatus = 'pending' | 'sent' | 'failed'
 
 export type Campaign = {
   id: string
@@ -33,4 +34,28 @@ export type CampaignDeleteResponse = {
   data: {
     deleted: boolean
   }
+}
+
+export type CampaignSendResponse = {
+  data: {
+    campaign_id: string
+    status: CampaignStatus
+    sent: number
+    failed: number
+  }
+}
+
+export type CampaignMessage = {
+  id: string
+  user_id: string
+  campaign_id: string
+  customer_id: string | null
+  email: string | null
+  status: CampaignMessageStatus
+  sent_at: string | null
+  error_message: string | null
+}
+
+export type CampaignMessagesResponse = {
+  data: CampaignMessage[]
 }
