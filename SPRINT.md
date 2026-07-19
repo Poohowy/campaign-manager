@@ -1,133 +1,82 @@
-# Sprint 4
+# Sprint 5
 
 ## Goal
 
-Implement the database foundation for the Campaign Manager backend.
+Implement the first end-to-end Customer module.
 
-The objective of this sprint is to create a production-ready persistence layer based on the approved `DATABASE.md` specification.
+After this sprint, authenticated users should be able to open the Customers page and view their customer list retrieved from the backend.
 
-The implementation must strictly follow the database design.
-
-No business logic or API endpoints should be implemented.
+No customer import functionality should be implemented yet.
 
 ---
 
 ## Tasks
 
-### SQLAlchemy
+### Backend
 
-Configure SQLAlchemy 2.0 as the ORM for the project.
+Implement CustomerService.
 
-Implement SQLAlchemy models for all entities defined in `DATABASE.md`.
+Responsibilities:
 
----
+- list customers
+- get customer by id
+- upsert customer
 
-### Alembic
+Implement Customer API.
 
-Configure Alembic.
+Endpoints:
 
-Generate the initial migration.
+- GET /customers
+- GET /customers/{id}
 
-The generated schema must match `DATABASE.md`.
+Use the existing repository layer.
 
----
-
-### Database Schema
-
-Implement the following tables:
-
-- customers
-- templates
-- smtp_settings
-- campaigns
-- campaign_messages
-
-Every table must follow the approved specification.
+Business logic must remain inside CustomerService.
 
 ---
 
-### Relationships
+### Frontend
 
-Implement all foreign keys and ORM relationships.
+Create a Customers page.
 
-Relationships should be explicit and bidirectional where appropriate.
+The page should:
 
----
+- be accessible from the sidebar
+- fetch customers from the backend
+- display customers in a table
+- display an empty state if no customers exist
 
-### Constraints
-
-Implement:
-
-- Primary Keys
-- Foreign Keys
-- Unique Constraints
-- Check Constraints (if applicable)
+Use shadcn/ui components.
 
 ---
 
-### Indexes
+### Navigation
 
-Implement every index defined in `DATABASE.md`.
+Create the initial application navigation.
 
----
+Sidebar:
 
-### Enums
+- Dashboard
+- Customers
+- Templates
+- Campaigns
+- SMTP
 
-Create PostgreSQL enums for:
-
-- CampaignStatus
-- CampaignMessageStatus
-
-Use SQLAlchemy enum types.
-
----
-
-### JSON Fields
-
-Implement JSONB columns for:
-
-- customers.custom_fields
-- campaign_messages.rendered_variables
-
-Provide appropriate defaults.
+Dashboard remains unchanged.
 
 ---
 
-### UUID Strategy
+### API Integration
 
-Use UUID as the primary key for every business entity.
+Connect the frontend to the backend.
 
-Configure automatic UUID generation.
+Use:
 
----
+GET /customers
 
-### Repository Layer
+No mock data.
 
-Create repository classes for:
-
-- CustomerRepository
-- TemplateRepository
-- CampaignRepository
-- CampaignMessageRepository
-- SMTPSettingsRepository
-
-Repositories should contain only generic database operations.
-
-Do not implement business logic.
-
----
-
-### Pydantic Schemas
-
-Create base schemas for all entities.
-
-Include:
-
-- Create schemas
-- Read schemas
-- Update schemas
-
-Do not implement validation specific to business rules yet.
+No hardcoded objects.
 
 ---
 
@@ -135,28 +84,22 @@ Do not implement validation specific to business rules yet.
 
 Verify:
 
-- Initial migration executes successfully.
-- All tables are created.
-- Foreign keys are valid.
-- Constraints are enforced.
-- Indexes are created.
-- Enums work correctly.
+- authenticated user can access Customers page
+- customer list endpoint works
+- empty state is displayed correctly
 
 ---
 
 ## Out of Scope
 
-Do NOT implement:
+Do not implement:
 
-- API endpoints
-- Services
-- Customer import
-- SMTP sending
-- Email templates logic
+- CSV/XLSX import
+- Customer editing
+- Customer deletion
+- Template module
+- SMTP module
 - Campaign sending
-- CSV/XLSX processing
-- Authentication changes
-- Background jobs
 
 ---
 
@@ -164,27 +107,10 @@ Do NOT implement:
 
 Sprint is complete when:
 
-- SQLAlchemy 2.0 is fully configured.
-- Alembic is configured.
-- Initial migration has been generated.
-- Database schema matches `DATABASE.md`.
-- SQLAlchemy models are implemented.
-- Repository layer exists.
-- Base Pydantic schemas exist.
-- Migration runs successfully on an empty database.
-- Backend starts without errors.
-- All tests pass.
-
----
-
-## Deliverables
-
-At the end of the sprint the developer should provide:
-
-1. Summary of implemented functionality.
-2. Database schema overview.
-3. Explanation of architectural decisions.
-4. Suggested updates to `DECISIONS.md`.
-5. Any discrepancies found between implementation and `DATABASE.md`.
-
-Wait for review before continuing.
+- Customer API works.
+- CustomerService exists.
+- CustomerRepository is used by CustomerService.
+- Customers page exists.
+- Frontend loads customers from backend.
+- Empty state is displayed correctly.
+- Tests pass.

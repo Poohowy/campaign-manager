@@ -10,7 +10,7 @@ def test_app_metadata() -> None:
 def test_health_endpoint_available() -> None:
     client = TestClient(app)
 
-    response = client.get("/health")
+    response = client.get("/api/v1/health")
 
     assert response.status_code in {200, 503}
     payload = response.json()

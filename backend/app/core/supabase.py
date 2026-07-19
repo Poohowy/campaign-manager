@@ -1,3 +1,4 @@
+import uuid
 from collections.abc import Callable
 from functools import lru_cache
 from typing import Any
@@ -35,3 +36,26 @@ def verify_supabase_connection(
         return True, None
     except Exception as exc:
         return False, f"Supabase connectivity check failed: {exc}"
+
+
+def get_user_id_from_access_token(
+    access_token: str,
+    client_factory: SupabaseClientFactory = get_supabase_client,
+) -> uuid.UUID | None:
+    try:
+        client = client_factory()
+    except Exception:
+        return None
+
+    if client is None:
+        return None
+
+    try:
+        response = client.auth.get_user(access_token)
+        user = getattr(response, "user", None)
+        user_id = getattr(user, "id", None)
+        if user_id is None:
+            return None
+        return uuid.UUID(str(user_id))
+    except Exception:
+        return None

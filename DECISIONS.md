@@ -310,3 +310,61 @@ Improves traceability, avoids ambiguity during implementation, and keeps archite
 
 Status:
 Accepted
+
+## ADR-018
+
+Title: API Base Path
+
+Decision:
+
+All backend endpoints are exposed under `/api/v1`.
+
+No public endpoints are exposed outside the versioned API namespace.
+
+Reason:
+
+Using a versioned API from the beginning provides a stable contract, simplifies future evolution of the API, and avoids breaking changes when introducing new versions.
+
+Status:
+
+Accepted
+
+---
+
+## ADR-019
+
+Title: Backend JWT Validation Strategy
+
+Decision:
+Protected backend endpoints validate bearer tokens by calling Supabase Auth `get_user` with the received access token.
+
+Request identity is derived from the validated Supabase user and propagated as `user_id` for service-layer authorization.
+
+Reason:
+This avoids custom authentication logic in FastAPI, keeps identity verification aligned with Supabase as the source of truth, and ensures request-level user scoping.
+
+Status:
+Accepted
+
+---
+
+## ADR-020
+
+Title: Incremental API Response Envelope Rollout
+
+Decision:
+The standardized API response envelope from `API.md` is rolled out incrementally by module.
+
+Customer endpoints must already return:
+
+- success payloads in `data` envelopes
+- collection payloads with `pagination`
+- failures as `error` objects with `code` and `message`
+
+Existing non-customer endpoints are migrated in subsequent sprints.
+
+Reason:
+Allows consistent contracts for newly delivered features without forcing a broad refactor across unrelated modules in the same sprint.
+
+Status:
+Accepted
