@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Alert } from '../../components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Spinner } from '../../components/ui/spinner'
@@ -5,10 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { CustomerImportDialog } from '../../features/customers/components/customer-import-dialog'
 import { useCustomersQuery } from '../../features/customers/hooks/useCustomersQuery'
+import type { CustomerImportResult } from '../../features/customers/types/customer-import'
 
 export function CustomersPage() {
   const customersQuery = useCustomersQuery()
   const { session } = useAuth()
+  const [importSummary, setImportSummary] = useState<CustomerImportResult | null>(null)
+
+  const handleImportCompleted = (result: CustomerImportResult) => {
+    setImportSummary(result)
+    void customersQuery.refetch()
+  }
 
   if (customersQuery.isLoading) {
     return (
@@ -41,9 +49,18 @@ export function CustomersPage() {
             <CardTitle>Customers</CardTitle>
             <CardDescription>Your customer list is currently empty.</CardDescription>
           </div>
-          <CustomerImportDialog accessToken={session?.access_token} />
+          <CustomerImportDialog
+            accessToken={session?.access_token}
+            onImportCompleted={handleImportCompleted}
+          />
         </CardHeader>
         <CardContent>
+          {importSummary ? (
+            <Alert variant="success">
+              Import completed. Imported: {importSummary.imported}, Updated: {importSummary.updated},
+              Skipped: {importSummary.skipped}.
+            </Alert>
+          ) : null}
           <p className="text-sm text-slate-600">
             Upload a CSV file to preview and map customer columns before import.
           </p>
@@ -59,9 +76,18 @@ export function CustomersPage() {
           <CardTitle>Customers</CardTitle>
           <CardDescription>Manage and review imported customers.</CardDescription>
         </div>
-        <CustomerImportDialog accessToken={session?.access_token} />
+        <CustomerImportDialog
+          accessToken={session?.access_token}
+          onImportCompleted={handleImportCompleted}
+        />
       </CardHeader>
       <CardContent>
+        {importSummary ? (
+          <Alert variant="success">
+            Import completed. Imported: {importSummary.imported}, Updated: {importSummary.updated},
+            Skipped: {importSummary.skipped}.
+          </Alert>
+        ) : null}
         <Table>
           <TableHeader>
             <TableRow>

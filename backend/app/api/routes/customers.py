@@ -1,9 +1,11 @@
+import json
 import math
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import get_current_user_id
@@ -17,7 +19,11 @@ from app.schemas.api import (
     PaginationMeta,
 )
 from app.schemas.customer import CustomerRead
-from app.schemas.customer_import import CustomerImportPreview
+from app.schemas.customer_import import (
+    CustomerImportMapping,
+    CustomerImportPreview,
+    CustomerImportResult,
+)
 from app.services.customer_import_service import (
     CustomerImportService,
     CustomerImportValidationError,
@@ -28,6 +34,7 @@ router = APIRouter(prefix="/customers", tags=["customers"])
 CurrentUserDep = Annotated[uuid.UUID | None, Depends(get_current_user_id)]
 DBSessionDep = Annotated[Session, Depends(get_db_session)]
 CSVFileDep = Annotated[UploadFile | None, File()]
+MappingPayloadDep = Annotated[str | None, Form()]
 
 
 def get_customer_service(session: DBSessionDep) -> CustomerService:
@@ -123,3 +130,45 @@ async def preview_customer_import(
         return _error_response(400, error.code, error.message)
 
     return DataResponse[CustomerImportPreview](data=preview)
+
+
+@router.post("/import", response_model=DataResponse[CustomerImportResult])
+async def import_customers(
+    user_id: CurrentUserDep,
+    session: DBSessionDep,
+    service: CustomerServiceDep,
+    file: CSVFileDep = None,
+    mapping: MappingPayloadDep = None,
+):
+    if user_id is None:
+        return _error_response(401, "UNAUTHORIZED", "Unauthorized.")
+
+    if file is None:
+        return _error_response(400, "CSV_FILE_REQUIRED", "CSV file is required.")
+
+    if not mapping:
+        return _error_response(400, "IMPORT_MAPPING_REQUIRED", "Column mapping is required.")
+
+    try:
+        mapping_data = json.loads(mapping)
+        validated_mapping = CustomerImportMapping.model_validate(mapping_data)
+    except (json.JSONDecodeError, ValidationError):
+        return _error_response(
+            400,
+            "IMPORT_MAPPING_INVALID",
+            "Column mapping is invalid.",
+        )
+
+    file_content = await file.read()
+    try:
+        result = service.import_customers(
+            user_id=user_id,
+            file_content=file_content,
+            mapping=validated_mapping,
+        )
+        session.commit()
+    except CustomerImportValidationError as error:
+        session.rollback()
+        return _error_response(400, error.code, error.message)
+
+    return DataResponse[CustomerImportResult](data=result)

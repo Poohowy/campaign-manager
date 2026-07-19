@@ -14,6 +14,7 @@ type AuthState = {
 type CustomersQueryState = {
   isLoading: boolean
   isError: boolean
+  refetch: () => Promise<unknown>
   data: {
     data: unknown[]
     pagination: {
@@ -47,6 +48,7 @@ describe('Customers access', () => {
     customersQueryState = {
       isLoading: false,
       isError: false,
+      refetch: vi.fn().mockResolvedValue(undefined),
       data: {
         data: [],
         pagination: {

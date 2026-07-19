@@ -15,6 +15,15 @@ class CustomerImportService:
     SUPPORTED_DELIMITERS = ",;\t"
 
     def generate_preview(self, *, file_content: bytes) -> CustomerImportPreview:
+        headers, data_rows = self.parse_csv(file_content=file_content)
+        preview_rows = data_rows[:10]
+        return CustomerImportPreview(
+            headers=headers,
+            preview=preview_rows,
+            row_count=len(data_rows),
+        )
+
+    def parse_csv(self, *, file_content: bytes) -> tuple[list[str], list[dict[str, str]]]:
         if not file_content:
             raise CustomerImportValidationError(
                 code="CSV_FILE_EMPTY",
@@ -64,13 +73,8 @@ class CustomerImportService:
             )
 
         data_rows = [row for row in csv_rows[1:] if self._is_non_empty_row(row)]
-        preview_rows = [self._row_to_record(headers, row) for row in data_rows[:10]]
-
-        return CustomerImportPreview(
-            headers=headers,
-            preview=preview_rows,
-            row_count=len(data_rows),
-        )
+        parsed_rows = [self._row_to_record(headers, row) for row in data_rows]
+        return headers, parsed_rows
 
     @staticmethod
     def _is_non_empty_row(row: list[str]) -> bool:

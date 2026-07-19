@@ -1,12 +1,12 @@
-# Sprint 6
+# Sprint 7
 
 ## Goal
 
-Implement the customer import foundation.
+Complete the customer import workflow.
 
-After this sprint, authenticated users should be able to upload a CSV file, preview its contents and map CSV columns to customer fields.
+After this sprint, authenticated users should be able to import customers into the database using the previously selected column mapping.
 
-No data should be written to the database.
+The import must perform upsert operations and preserve existing customer history.
 
 ---
 
@@ -14,104 +14,125 @@ No data should be written to the database.
 
 ### Backend
 
-Create a new CustomerImportService.
+Implement:
+
+POST /api/v1/customers/import
 
 Responsibilities:
 
-- parse CSV files
-- validate CSV format
-- detect column headers
-- generate preview
-- count rows
+- receive the selected column mapping
+- parse the uploaded CSV
+- validate required fields
+- perform upsert operations
+- preserve existing customer records
+- never overwrite campaign-related information
 
-No database writes.
+Upsert must use the selected External ID as the unique identifier.
 
----
+Return:
 
-Implement API endpoint:
+- imported count
+- updated count
+- skipped count
 
-POST /api/v1/customers/import/preview
+using the standard API response envelope.
 
-Input:
-
-- multipart/form-data
-- CSV file
-
-Output:
-
-- detected headers
-- first 10 rows
-- total row count
+The import endpoint must receive the original CSV file again together with the selected column mapping.
+The backend must not persist preview data or temporary import sessions between requests.
+The import process must remain stateless.
 
 ---
 
-### Frontend
+### Import Rules
 
-Add an **Import Customers** button to the Customers page.
+For every row:
 
-Clicking the button should open an import dialog.
+If External ID does not exist:
 
-The dialog should allow:
+- create a new customer
 
-- selecting a CSV file
-- uploading the file
-- displaying detected columns
-- displaying the first 10 preview rows
+If External ID already exists:
 
----
+- update customer information
 
-### Column Mapping
+Never modify:
 
-Allow the user to map CSV columns to customer fields.
+- created_at
+- campaign history
+- future campaign statistics
 
-Required fields:
-
-- External ID
-- Company Name
-- Email
-
-Optional fields:
-
-- Contact Name
-- Phone
-- Website
-- City
-- Country
-
-The Continue button must remain disabled until all required fields are mapped.
+Only customer profile fields may be updated.
 
 ---
 
 ### Validation
 
-Validate:
+Skip invalid rows.
 
-- file exists
-- CSV is readable
-- required mappings are selected
+Examples:
 
-Display clear validation messages.
+- missing External ID
+- missing Company Name
+- missing Email
+- invalid email
+
+Skipped rows should not stop the import.
+
+Return the number of skipped rows.
+
+---
+
+### Frontend
+
+Complete the import dialog.
+
+After clicking Continue:
+
+- upload the CSV
+- send the selected mapping
+- execute the import
+- display loading state
+
+After completion:
+
+Display:
+
+- Imported
+- Updated
+- Skipped
+
+Close the dialog.
+
+Refresh the Customers table automatically.
+
+After preview generation, keep the selected File object in client memory.
+When the user clicks Continue, send the original CSV file again together with the selected column mapping.
 
 ---
 
 ### UI
 
-Use shadcn/ui components.
+Display success feedback after import.
 
-Keep the import dialog simple and responsive.
+Display backend validation errors when import fails.
 
 ---
 
 ### Tests
 
-Verify:
+Backend:
 
-- CSV parsing
-- Preview generation
-- Header detection
-- Empty file handling
-- Invalid CSV handling
-- Required mapping validation
+- import new customers
+- update existing customers
+- preserve existing data
+- skip invalid rows
+
+Frontend:
+
+- successful import
+- loading state
+- import summary
+- automatic customer table refresh
 
 ---
 
@@ -119,12 +140,12 @@ Verify:
 
 Do not implement:
 
-- Database import
-- Upsert
-- Duplicate detection
-- XLSX support
-- Background jobs
-- Import history
+- XLSX
+- duplicate merge UI
+- import history
+- rollback
+- background jobs
+- progress bars
 
 ---
 
@@ -132,9 +153,9 @@ Do not implement:
 
 Sprint is complete when:
 
-- CSV files can be uploaded.
-- Preview is displayed.
-- Headers are detected.
-- Column mapping works.
-- No data is written to the database.
+- Customers can be imported.
+- Existing customers are updated.
+- Invalid rows are skipped.
+- Customer list refreshes automatically.
+- Import summary is displayed.
 - Tests pass.

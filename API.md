@@ -126,17 +126,34 @@ No data is persisted.
 
 Imports customers using the selected column mapping.
 
-The backend performs an upsert using the configured unique identifier.
+Request:
+
+- multipart/form-data
+- CSV file
+- column mapping
+
+The backend:
+
+- parses the CSV file
+- validates required fields
+- performs an upsert using the selected External ID
+- creates new customers
+- updates existing customers
+- skips invalid rows
 
 Returns:
 
 ```json
 {
-  "imported": 120,
-  "updated": 18,
-  "skipped": 4
+  "data": {
+    "imported": 120,
+    "updated": 18,
+    "skipped": 4
+  }
 }
 ```
+
+Errors follow the standardized API error envelope.
 
 ---
 

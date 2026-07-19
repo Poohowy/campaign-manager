@@ -5,11 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table'
-import { CustomersApiError, fetchCustomerImportPreview } from '../api/customer-client'
-import type { CustomerImportFieldKey, CustomerImportMappings, CustomerImportPreviewData } from '../types/customer-import'
+import { CustomersApiError, fetchCustomerImportPreview, importCustomers } from '../api/customer-client'
+import type {
+  CustomerImportFieldKey,
+  CustomerImportMappings,
+  CustomerImportPreviewData,
+  CustomerImportResult,
+} from '../types/customer-import'
 
 type CustomerImportDialogProps = {
   accessToken: string | undefined
+  onImportCompleted: (result: CustomerImportResult) => void
 }
 
 type MappingField = {
@@ -31,14 +37,15 @@ const mappingFields: MappingField[] = [
 
 const requiredFieldKeys = mappingFields.filter((field) => field.required).map((field) => field.key)
 
-export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps) {
+export function CustomerImportDialog({ accessToken, onImportCompleted }: CustomerImportDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
   const [previewData, setPreviewData] = useState<CustomerImportPreviewData | null>(null)
   const [mappings, setMappings] = useState<CustomerImportMappings>({})
-  const [continueMessage, setContinueMessage] = useState<string | null>(null)
 
   const isContinueEnabled = useMemo(
     () => requiredFieldKeys.every((fieldKey) => Boolean(mappings[fieldKey])),
@@ -56,10 +63,11 @@ export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps)
   const resetDialogState = () => {
     setSelectedFile(null)
     setIsUploading(false)
+    setIsImporting(false)
     setUploadError(null)
+    setImportError(null)
     setPreviewData(null)
     setMappings({})
-    setContinueMessage(null)
   }
 
   const closeDialog = () => {
@@ -75,7 +83,7 @@ export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps)
     const nextFile = event.target.files?.[0] ?? null
     setSelectedFile(nextFile)
     setUploadError(null)
-    setContinueMessage(null)
+    setImportError(null)
   }
 
   const updateMapping = (fieldKey: CustomerImportFieldKey, header: string) => {
@@ -83,11 +91,10 @@ export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps)
       ...currentMappings,
       [fieldKey]: header || undefined,
     }))
-    setContinueMessage(null)
+    setImportError(null)
   }
 
   const handleUpload = async () => {
-    setContinueMessage(null)
     if (!selectedFile) {
       setUploadError('Please select a CSV file before uploading.')
       return
@@ -99,6 +106,7 @@ export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps)
     }
 
     setUploadError(null)
+    setImportError(null)
     setIsUploading(true)
     try {
       const response = await fetchCustomerImportPreview(accessToken, selectedFile)
@@ -117,12 +125,36 @@ export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps)
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!isContinueEnabled) {
       return
     }
 
-    setContinueMessage('Column mapping is valid. Data import will be implemented in the next sprint.')
+    if (!selectedFile) {
+      setImportError('Please select a CSV file before importing.')
+      return
+    }
+
+    if (!accessToken) {
+      setImportError('You must be authenticated to import customers.')
+      return
+    }
+
+    setImportError(null)
+    setIsImporting(true)
+    try {
+      const response = await importCustomers(accessToken, selectedFile, mappings)
+      onImportCompleted(response.data)
+      closeDialog()
+    } catch (error) {
+      if (error instanceof CustomersApiError) {
+        setImportError(error.message)
+      } else {
+        setImportError('Unable to import customers.')
+      }
+    } finally {
+      setIsImporting(false)
+    }
   }
 
   return (
@@ -230,11 +262,11 @@ export function CustomerImportDialog({ accessToken }: CustomerImportDialogProps)
                       </Alert>
                     ) : null}
 
-                    {continueMessage ? <Alert variant="success">{continueMessage}</Alert> : null}
+                    {importError ? <Alert variant="destructive">{importError}</Alert> : null}
 
                     <div className="flex justify-end">
-                      <Button onClick={handleContinue} disabled={!isContinueEnabled}>
-                        Continue
+                      <Button onClick={() => void handleContinue()} disabled={!isContinueEnabled || isImporting}>
+                        {isImporting ? 'Importing...' : 'Continue'}
                       </Button>
                     </div>
                   </section>

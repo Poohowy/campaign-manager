@@ -1,5 +1,5 @@
 import type { CustomersListResult } from '../types/customer'
-import type { CustomerImportPreviewResponse } from '../types/customer-import'
+import type { CustomerImportMappings, CustomerImportPreviewResponse, CustomerImportResponse } from '../types/customer-import'
 
 type ErrorEnvelope = {
   error?: {
@@ -60,4 +60,32 @@ export async function fetchCustomerImportPreview(
   }
 
   return (await response.json()) as CustomerImportPreviewResponse
+}
+
+export async function importCustomers(
+  accessToken: string,
+  file: File,
+  mapping: CustomerImportMappings,
+): Promise<CustomerImportResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('mapping', JSON.stringify(mapping))
+
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/customers/import`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ErrorEnvelope | null
+    throw new CustomersApiError(
+      payload?.error?.code ?? 'CUSTOMERS_IMPORT_FAILED',
+      payload?.error?.message ?? 'Unable to import customers.',
+    )
+  }
+
+  return (await response.json()) as CustomerImportResponse
 }

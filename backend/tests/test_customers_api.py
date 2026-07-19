@@ -6,8 +6,9 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import get_current_user_id
 from app.api.routes.customers import get_customer_import_service, get_customer_service
+from app.db.session import get_db_session
 from app.main import app
-from app.schemas.customer_import import CustomerImportPreview
+from app.schemas.customer_import import CustomerImportMapping, CustomerImportPreview
 
 
 def test_get_customers_returns_paginated_data() -> None:
@@ -176,5 +177,114 @@ def test_preview_customer_import_invalid_csv_returns_error_envelope() -> None:
         "error": {
             "code": "CSV_FILE_INVALID",
             "message": "CSV file contains invalid characters.",
+        }
+    }
+
+
+def test_import_customers_returns_summary_envelope() -> None:
+    user_id = uuid.uuid4()
+    csv_payload = "external_id,company_name,email\next-1,ACME,hello@acme.com\n"
+    mapping_payload = '{"external_id":"external_id","company_name":"company_name","email":"email"}'
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+        def rollback(self) -> None:
+            return None
+
+    class FakeService:
+        def import_customers(self, **kwargs):
+            assert kwargs["user_id"] == user_id
+            assert kwargs["file_content"].decode("utf-8") == csv_payload
+            assert isinstance(kwargs["mapping"], CustomerImportMapping)
+            return {
+                "imported": 1,
+                "updated": 0,
+                "skipped": 0,
+            }
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+    app.dependency_overrides[get_customer_service] = lambda: FakeService()
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/customers/import",
+        data={"mapping": mapping_payload},
+        files={"file": ("customers.csv", csv_payload)},
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": {
+            "imported": 1,
+            "updated": 0,
+            "skipped": 0,
+        }
+    }
+
+
+def test_import_customers_requires_mapping() -> None:
+    user_id = uuid.uuid4()
+    csv_payload = "external_id,company_name,email\next-1,ACME,hello@acme.com\n"
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+        def rollback(self) -> None:
+            return None
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/customers/import",
+        files={"file": ("customers.csv", csv_payload)},
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": {
+            "code": "IMPORT_MAPPING_REQUIRED",
+            "message": "Column mapping is required.",
+        }
+    }
+
+
+def test_import_customers_rejects_invalid_mapping_payload() -> None:
+    user_id = uuid.uuid4()
+    csv_payload = "external_id,company_name,email\next-1,ACME,hello@acme.com\n"
+
+    class FakeSession:
+        def commit(self) -> None:
+            return None
+
+        def rollback(self) -> None:
+            return None
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    app.dependency_overrides[get_db_session] = lambda: FakeSession()
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/customers/import",
+        data={"mapping": '{"external_id":"","company_name":"company_name","email":"email"}'},
+        files={"file": ("customers.csv", csv_payload)},
+    )
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": {
+            "code": "IMPORT_MAPPING_INVALID",
+            "message": "Column mapping is invalid.",
         }
     }

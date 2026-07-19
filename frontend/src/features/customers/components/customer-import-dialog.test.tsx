@@ -2,8 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 import { CustomerImportDialog } from './customer-import-dialog'
 
-const { fetchCustomerImportPreviewMock } = vi.hoisted(() => ({
+const { fetchCustomerImportPreviewMock, importCustomersMock } = vi.hoisted(() => ({
   fetchCustomerImportPreviewMock: vi.fn(),
+  importCustomersMock: vi.fn(),
 }))
 
 vi.mock('../api/customer-client', () => {
@@ -19,12 +20,18 @@ vi.mock('../api/customer-client', () => {
   return {
     CustomersApiError,
     fetchCustomerImportPreview: fetchCustomerImportPreviewMock,
+    importCustomers: importCustomersMock,
   }
 })
 
 describe('CustomerImportDialog', () => {
+  beforeEach(() => {
+    fetchCustomerImportPreviewMock.mockReset()
+    importCustomersMock.mockReset()
+  })
+
   it('validates file selection before upload', () => {
-    render(<CustomerImportDialog accessToken="token" />)
+    render(<CustomerImportDialog accessToken="token" onImportCompleted={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Import Customers' }))
     fireEvent.click(screen.getByRole('button', { name: 'Upload and Preview' }))
@@ -32,7 +39,7 @@ describe('CustomerImportDialog', () => {
     expect(screen.getByText('Please select a CSV file before uploading.')).toBeInTheDocument()
   })
 
-  it('requires required field mappings before continue', async () => {
+  it('imports successfully after required mappings are selected', async () => {
     fetchCustomerImportPreviewMock.mockResolvedValueOnce({
       data: {
         headers: ['external_id', 'company_name', 'email', 'phone'],
@@ -47,8 +54,12 @@ describe('CustomerImportDialog', () => {
         row_count: 1,
       },
     })
+    importCustomersMock.mockResolvedValueOnce({
+      data: { imported: 1, updated: 0, skipped: 0 },
+    })
+    const onImportCompleted = vi.fn()
 
-    render(<CustomerImportDialog accessToken="token" />)
+    render(<CustomerImportDialog accessToken="token" onImportCompleted={onImportCompleted} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Import Customers' }))
 
@@ -79,8 +90,44 @@ describe('CustomerImportDialog', () => {
     expect(continueButton).toBeEnabled()
 
     fireEvent.click(continueButton)
-    expect(
-      screen.getByText('Column mapping is valid. Data import will be implemented in the next sprint.'),
-    ).toBeInTheDocument()
+    await screen.findByRole('button', { name: 'Import Customers' })
+
+    expect(importCustomersMock).toHaveBeenCalledTimes(1)
+    expect(onImportCompleted).toHaveBeenCalledWith({ imported: 1, updated: 0, skipped: 0 })
+  })
+
+  it('shows loading state while import is running', async () => {
+    fetchCustomerImportPreviewMock.mockResolvedValueOnce({
+      data: {
+        headers: ['external_id', 'company_name', 'email'],
+        preview: [{ external_id: 'ext-1', company_name: 'ACME', email: 'hello@acme.com' }],
+        row_count: 1,
+      },
+    })
+    importCustomersMock.mockImplementation(() => new Promise(() => {}))
+
+    render(<CustomerImportDialog accessToken="token" onImportCompleted={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import Customers' }))
+    fireEvent.change(screen.getByLabelText('CSV File'), {
+      target: {
+        files: [new File(['external_id,company_name,email'], 'customers.csv', { type: 'text/csv' })],
+      },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Upload and Preview' }))
+    await screen.findByText('Detected columns')
+
+    fireEvent.change(screen.getByLabelText('External ID (required)'), {
+      target: { value: 'external_id' },
+    })
+    fireEvent.change(screen.getByLabelText('Company Name (required)'), {
+      target: { value: 'company_name' },
+    })
+    fireEvent.change(screen.getByLabelText('Email (required)'), {
+      target: { value: 'email' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(await screen.findByRole('button', { name: 'Importing...' })).toBeInTheDocument()
   })
 })
