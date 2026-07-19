@@ -7,6 +7,7 @@ import { RegisterRoute } from '../routes/auth/register'
 import { AuthRoute } from '../routes/auth/route'
 import { CustomersRoute } from '../routes/customers/route'
 import { DashboardRoute } from '../routes/dashboard/route'
+import { TemplatesRoute } from '../routes/templates/route'
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <CustomersRoute />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/templates',
+    element: (
+      <ProtectedRoute>
+        <TemplatesRoute />
       </ProtectedRoute>
     ),
   },

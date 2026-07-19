@@ -5,9 +5,10 @@ import { cn } from '../../shared/utils/cn'
 const primaryItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Customers', to: '/customers' },
+  { label: 'Templates', to: '/templates' },
 ]
 
-const disabledItems = ['Templates', 'Campaigns', 'SMTP']
+const disabledItems = ['Campaigns', 'SMTP']
 
 export function AppShell({ children }: PropsWithChildren) {
   return (

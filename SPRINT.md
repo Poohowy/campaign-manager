@@ -1,10 +1,12 @@
-# Sprint 7.5
+# Sprint 8
 
 ## Goal
 
-Implement basic customer deletion.
+Implement the Template Management module.
 
-Authenticated users should be able to select one or more customers and permanently delete them after explicit confirmation.
+Authenticated users should be able to create, edit, view and delete email templates.
+
+No variable rendering or preview should be implemented in this sprint.
 
 ---
 
@@ -12,141 +14,95 @@ Authenticated users should be able to select one or more customers and permanent
 
 ### Backend
 
-Implement:
+Implement CRUD endpoints:
 
-DELETE /api/v1/customers
+GET /api/v1/templates
 
-Request:
+GET /api/v1/templates/{id}
 
-```json
-{
-  "ids": [
-    "uuid-1",
-    "uuid-2"
-  ]
-}
-```
+POST /api/v1/templates
+
+PUT /api/v1/templates/{id}
+
+DELETE /api/v1/templates/{id}
 
 Requirements:
 
-- Delete only customers belonging to the authenticated user.
-- Ignore non-existing IDs.
-- Return the number of deleted customers.
-- Use the standard API response envelope.
+- All templates belong to the authenticated user.
+- Follow Router → Service → Repository → Database.
+- Use standardized API response envelopes.
+- Ignore requests for templates belonging to another user.
 
-Example response:
+---
 
-```json
-{
-  "data": {
-    "deleted": 5
-  }
-}
-```
+### Database
+
+Use the existing templates table.
+
+No schema changes.
 
 ---
 
 ### Frontend
 
-Add row selection to the Customers table.
+Create a new Templates page.
 
-Requirements:
+The page should display all templates in a table.
 
-- Checkbox for every row.
-- Checkbox in the table header for **Select All / Deselect All** on the current page.
-- Support selecting one or more customers.
-- Display **Delete Selected** only when at least one customer is selected.
-- Hide **Import Customers** while selection mode is active.
-- Replace the default page title with a selection summary whenever at least one customer is selected.
-- Clicking a table row (except interactive controls) should toggle the row selection.
+Columns:
 
-Examples:
+- Name
+- Subject
+- Last Updated
 
-- 1 customer selected
-- 3 customers selected
-- 15 customers selected
+Actions:
 
-The selection summary should appear in the page header next to the available bulk actions.
-
-The header checkbox should:
-
-- Select all customers currently visible on the page.
-- Deselect all customers when clicked again.
-- Correctly reflect the current selection state.
-- Display the indeterminate state when only some rows are selected.
-
-Selections should persist while sorting or filtering the current page, but should be cleared after successful deletion.
-
----
-
-### Confirmation Dialog
-
-Before deleting customers, display a confirmation dialog.
-
-Use the standard shadcn/ui Alert Dialog.
-
-Title:
-
-Delete Customers
-
-Message:
-
-Are you sure you want to permanently delete the selected customers?
-
-This action cannot be undone.
-
-Buttons:
-
-- Cancel
+- Create
+- Edit
 - Delete
 
-Requirements:
+---
 
-- Delete must use the destructive variant.
-- Cancel should keep the current selection.
-- Clicking outside the dialog must not delete customers.
+### Template Form
+
+Create a reusable form supporting both Create and Edit modes.
+
+Fields:
+
+- Template Name
+- Subject
+- Body (Markdown)
+
+Validation:
+
+Required:
+
+- Name
+- Subject
+- Body
 
 ---
 
-### After Successful Deletion
+### Delete
 
-- Close the dialog.
-- Refresh the customer list automatically.
-- Clear the current selection.
-- Restore the default page title ("Customers").
-- Restore the **Import Customers** button.
-- Display a success message showing how many customers were deleted.
+Deleting a template must require confirmation.
 
-Example:
-
-Customer deleted successfully.
-
-or
-
-5 customers deleted successfully.
-
----
-
-### Validation
-
-- Do not allow deletion when nothing is selected.
-- Handle backend errors gracefully.
-- Never delete customers belonging to another user.
+Use the existing Alert Dialog pattern introduced in Sprint 7.5.
 
 ---
 
 ### UI
 
-Use shadcn/ui components.
+Reuse existing UI components whenever possible.
 
-Use:
+Reuse:
 
 - Table
-- Checkbox
-- Alert Dialog
 - Button
+- Card
+- Alert Dialog
 
-Keep the page simple and consistent with the existing Customers module.
+The Templates page should visually match the Customers module.
 
 ---
 
@@ -154,23 +110,19 @@ Keep the page simple and consistent with the existing Customers module.
 
 Backend:
 
-- delete one customer
-- delete multiple customers
-- ignore unknown IDs
-- enforce user ownership
+- create template
+- update template
+- delete template
+- list templates
+- ownership enforcement
 
 Frontend:
 
-- row selection
-- select all
-- deselect all
-- indeterminate header checkbox
-- confirmation dialog
-- successful deletion
-- automatic table refresh
-- success message
-- Import button visibility
-- selection summary visibility
+- template list
+- create dialog
+- edit dialog
+- delete confirmation
+- automatic refresh
 
 ---
 
@@ -178,12 +130,12 @@ Frontend:
 
 Do not implement:
 
-- Delete All
-- Soft delete
-- Undo
-- Bulk edit
-- Archive
-- Pagination-aware selection across multiple pages
+- Variable rendering
+- Variable picker
+- Template preview
+- Rich text editor
+- Version history
+- Duplicate template
 
 ---
 
@@ -191,14 +143,9 @@ Do not implement:
 
 Sprint is complete when:
 
-- One or more customers can be selected.
-- Users can select or deselect all customers on the current page.
-- The header checkbox correctly supports the indeterminate state.
-- Import Customers is replaced by Delete Selected while rows are selected.
-- The page title changes to the selection summary.
-- Confirmation dialog is displayed before deletion.
-- Selected customers are deleted.
-- Customer list refreshes automatically.
-- Selection is cleared after deletion.
-- Success message is displayed.
+- Templates can be created.
+- Templates can be edited.
+- Templates can be deleted.
+- Template list refreshes automatically.
+- Confirmation dialog works.
 - Tests pass.

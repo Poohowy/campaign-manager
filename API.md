@@ -103,18 +103,20 @@ Response:
 
 ```json
 {
-  "headers": [
-    "company_name",
-    "email",
-    "city"
-  ],
-  "preview": [
-    {
-      "company_name": "ABC",
-      "email": "office@abc.com"
-    }
-  ],
-  "row_count": 156
+  "data": {
+    "headers": [
+      "company_name",
+      "email",
+      "city"
+    ],
+    "preview": [
+      {
+        "company_name": "ABC",
+        "email": "office@abc.com"
+      }
+    ],
+    "row_count": 156
+  }
 }
 ```
 
@@ -157,6 +159,35 @@ Errors follow the standardized API error envelope.
 
 ---
 
+## DELETE /customers
+
+Deletes selected customers.
+
+Request:
+
+```json
+{
+  "ids": [
+    "uuid-1",
+    "uuid-2"
+  ]
+}
+```
+
+Only customers belonging to the authenticated user may be deleted.
+
+Returns:
+
+```json
+{
+  "data": {
+    "deleted": 2
+  }
+}
+```
+
+---
+
 # Resource: Templates
 
 Represents email templates.
@@ -179,17 +210,67 @@ Returns template details.
 
 Creates a new template.
 
+Request:
+
+```json
+{
+  "name": "Welcome Email",
+  "subject": "Welcome {{company_name}}",
+  "body_markdown": "# Welcome\n\nThank you for joining us."
+}
+```
+
+Returns:
+
+```json
+{
+  "data": {
+    "id": "uuid"
+  }
+}
+```
+
 ---
 
 ## PUT /templates/{id}
 
 Updates an existing template.
 
+Request:
+
+```json
+{
+  "name": "Updated Template",
+  "subject": "Hello {{company_name}}",
+  "body_markdown": "# Updated"
+}
+```
+
+Returns:
+
+```json
+{
+  "data": {
+    "updated": true
+  }
+}
+```
+
 ---
 
 ## DELETE /templates/{id}
 
 Deletes a template.
+
+Returns:
+
+```json
+{
+  "data": {
+    "deleted": true
+  }
+}
+```
 
 ---
 
@@ -303,35 +384,6 @@ Supports filtering by:
 ---
 
 # Resource: Health
-
----
-
-## DELETE /customers
-
-Deletes selected customers.
-
-Request:
-
-```json
-{
-  "ids": [
-    "uuid-1",
-    "uuid-2"
-  ]
-}
-```
-
-Only customers belonging to the authenticated user may be deleted.
-
-Returns:
-
-```json
-{
-  "data": {
-    "deleted": 2
-  }
-}
-```
 
 ---
 
