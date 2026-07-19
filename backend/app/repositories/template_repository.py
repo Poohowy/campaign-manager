@@ -28,6 +28,20 @@ class TemplateRepository(BaseRepository[Template]):
         )
         return self.session.scalars(stmt).first()
 
+    def list_by_user_and_ids(
+        self,
+        user_id: uuid.UUID,
+        template_ids: list[uuid.UUID],
+    ) -> list[Template]:
+        if not template_ids:
+            return []
+
+        stmt: Select[tuple[Template]] = select(Template).where(
+            Template.user_id == user_id,
+            Template.id.in_(template_ids),
+        )
+        return list(self.session.scalars(stmt))
+
     def delete_by_user_and_id(self, user_id: uuid.UUID, template_id: uuid.UUID) -> bool:
         stmt = delete(Template).where(
             Template.user_id == user_id,

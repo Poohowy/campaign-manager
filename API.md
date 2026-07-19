@@ -449,6 +449,36 @@ Response:
 
 ---
 
+## POST /campaigns
+
+Creates a campaign.
+
+Request:
+
+```json
+{
+  "name": "Architecture Firms - July",
+  "template_id": "uuid",
+  "customer_ids": [
+    "uuid",
+    "uuid"
+  ]
+}
+```
+
+Returns:
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "status": "draft"
+  }
+}
+```
+
+---
+
 # Resource: Campaign Messages
 
 Represents individual emails sent within a campaign.

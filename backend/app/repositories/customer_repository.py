@@ -23,6 +23,20 @@ class CustomerRepository(BaseRepository[Customer]):
         )
         return self.session.scalars(stmt).first()
 
+    def list_by_user_and_ids(
+        self,
+        user_id: uuid.UUID,
+        customer_ids: list[uuid.UUID],
+    ) -> list[Customer]:
+        if not customer_ids:
+            return []
+
+        stmt: Select[tuple[Customer]] = select(Customer).where(
+            Customer.user_id == user_id,
+            Customer.id.in_(customer_ids),
+        )
+        return list(self.session.scalars(stmt))
+
     def list_by_user(
         self,
         user_id: uuid.UUID,

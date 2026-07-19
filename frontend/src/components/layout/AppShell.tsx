@@ -6,10 +6,9 @@ const primaryItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Customers', to: '/customers' },
   { label: 'Templates', to: '/templates' },
+  { label: 'Campaigns', to: '/campaigns' },
   { label: 'SMTP', to: '/smtp' },
 ]
-
-const disabledItems = ['Campaigns']
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
@@ -37,11 +36,6 @@ export function AppShell({ children }: PropsWithChildren) {
               >
                 {item.label}
               </NavLink>
-            ))}
-            {disabledItems.map((item) => (
-              <div key={item} className="rounded-md px-3 py-2 text-sm text-slate-400">
-                {item}
-              </div>
             ))}
           </nav>
         </aside>

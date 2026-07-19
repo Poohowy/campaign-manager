@@ -1,103 +1,132 @@
-# Sprint 10
+# Sprint 11
 
 ## Goal
 
-Implement SMTP configuration and connection testing.
+Implement Campaign Creation.
 
-Authenticated users should be able to configure SMTP settings, securely store credentials, and verify that the configuration works by sending a test email.
+Authenticated users should be able to create campaigns by selecting an email template and one or more customers.
 
-No campaign sending functionality should be implemented in this sprint.
+Campaign creation prepares all required data for future email sending but does not send any emails.
 
 ---
 
 ## Backend
 
-### SMTP Configuration
-
 Implement:
 
-GET /api/v1/smtp
+GET /api/v1/campaigns
 
-PUT /api/v1/smtp
+GET /api/v1/campaigns/{id}
 
-POST /api/v1/smtp/test
+POST /api/v1/campaigns
 
-Requirements:
-
-- every user owns exactly one SMTP configuration,
-- passwords must never be returned by the API,
-- passwords must be encrypted before being stored,
-- existing SMTP configuration should be updated instead of creating duplicates.
-
----
-
-### SMTP Test
-
-Implement SMTP connection testing.
-
-The endpoint should:
-
-- load the authenticated user's SMTP configuration,
-- decrypt the stored password,
-- establish an SMTP connection,
-- send a simple test email,
-- return success or a standardized error response.
-
----
-
-### Security
+DELETE /api/v1/campaigns/{id}
 
 Requirements:
 
-- passwords must never be logged,
-- passwords must never be returned by the API,
-- passwords must always remain encrypted in the database,
-- only the authenticated user may access their SMTP configuration.
+- all campaigns belong to the authenticated user,
+- verify ownership of the selected template,
+- verify ownership of all selected customers,
+- create one campaign record,
+- create one campaign_message record per selected customer,
+- initial campaign status = draft,
+- initial campaign_message status = pending,
+- do not render templates,
+- do not send emails,
+- do not communicate with SMTP.
 
 ---
 
 ## Frontend
 
-Create a dedicated SMTP Settings page.
+Create a Campaigns page.
 
-Fields:
+Display a table with:
 
-- SMTP Host
-- SMTP Port
-- Username
-- Password
-- From Name
-- From Email
-- Use TLS
+- Campaign Name
+- Template
+- Number of Recipients
+- Status
+- Created At
 
-Requirements:
+Actions:
 
-- create and edit use the same form,
-- password field behaves like a standard password input,
-- existing configuration is loaded automatically,
-- password is never displayed after saving.
+- Create Campaign
+- Delete Campaign
+
+Deleting a campaign must always require confirmation using the existing Alert Dialog component.
 
 ---
 
-### Test Email
+## Campaign Form
 
-Add a section:
+Create a reusable Create Campaign form.
 
-Test SMTP Connection
+Fields:
 
-Field:
+- Campaign Name
+- Template
+- Customers
 
-Recipient Email
+Validation:
 
-Button:
+Required:
 
-Send Test Email
+- Campaign Name
+- Template
+- At least one customer
 
-Display:
+The customer selector should support:
 
-- loading state,
-- success message,
-- backend validation errors.
+- multi-selection,
+- search by company name,
+- select / deselect multiple customers.
+
+Reuse existing UI components whenever possible.
+
+---
+
+## Campaign Summary
+
+Before saving, display a summary containing:
+
+- Campaign Name
+- Selected Template
+- Number of Recipients
+- Initial Status (Draft)
+
+The summary is read-only.
+
+---
+
+## Campaign Status
+
+Introduce campaign lifecycle statuses.
+
+Supported values:
+
+- draft
+- running
+- completed
+- failed
+
+For this sprint every newly created campaign must always start with:
+
+draft
+
+No other status transitions are implemented in this sprint.
+
+---
+
+## Campaign Messages
+
+Creating a campaign must automatically create one campaign_message record for every selected customer.
+
+Each message must initially have:
+
+- status = pending
+
+No rendering or sending should occur.
 
 ---
 
@@ -105,7 +134,13 @@ Display:
 
 Reuse existing UI components.
 
-Keep the page visually consistent with Customers and Templates.
+The Campaigns module should visually match:
+
+- Customers
+- Templates
+- SMTP
+
+The application should feel like a single consistent product.
 
 ---
 
@@ -113,21 +148,22 @@ Keep the page visually consistent with Customers and Templates.
 
 Backend:
 
-- create SMTP configuration
-- update SMTP configuration
-- encrypt password
-- decrypt password
-- send test email
+- create campaign
+- list campaigns
+- get campaign
+- delete campaign
 - ownership enforcement
+- campaign_messages creation
+- initial statuses
 
 Frontend:
 
-- load SMTP configuration
-- save SMTP configuration
-- password handling
-- send test email
-- success message
-- validation
+- campaign list
+- create campaign dialog
+- campaign validation
+- customer multi-select
+- delete confirmation
+- automatic refresh after create/delete
 
 ---
 
@@ -135,12 +171,15 @@ Frontend:
 
 Do not implement:
 
-- Campaign sending
-- Queue
-- Retry logic
-- Attachments
-- OAuth authentication
-- Multiple SMTP configurations
+- email rendering,
+- SMTP sending,
+- retry,
+- scheduling,
+- campaign editing,
+- campaign duplication,
+- analytics,
+- attachments,
+- campaign history details.
 
 ---
 
@@ -148,10 +187,11 @@ Do not implement:
 
 Sprint is complete when:
 
-- SMTP configuration can be created.
-- Existing configuration can be edited.
-- Passwords are encrypted.
-- Passwords are never returned by the API.
-- Test email can be sent.
-- Success and error states are displayed.
-- Tests pass.
+- campaigns can be created,
+- campaigns can be listed,
+- campaigns can be deleted,
+- campaign_messages are automatically generated,
+- every campaign starts in Draft status,
+- every campaign_message starts in Pending status,
+- all tests pass,
+- the application remains fully functional.
